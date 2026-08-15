@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -13,14 +14,27 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 3 {
-		log.Fatal("Usage: unfold <config.json> <statement.csv>")
+	bankFlag := flag.String("bank", "", "bank profile to use (name or key); optional when config has one profile")
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: unfold [--bank name] <config.json> <statement.csv>\n")
+		flag.PrintDefaults()
 	}
-	configPath, statementPath := os.Args[1], os.Args[2]
+	flag.Parse()
 
-	cfg, err := config.Load(configPath)
+	if flag.NArg() < 2 {
+		flag.Usage()
+		os.Exit(1)
+	}
+	configPath, statementPath := flag.Arg(0), flag.Arg(1)
+
+	file, err := config.Load(configPath)
 	if err != nil {
 		log.Fatalf("load config: %v", err)
+	}
+
+	cfg, err := file.Select(*bankFlag)
+	if err != nil {
+		log.Fatalf("select profile: %v", err)
 	}
 
 	bankParser, err := parser.Get(cfg.BankKey())
@@ -28,20 +42,20 @@ func main() {
 		log.Fatalf("select parser: %v", err)
 	}
 
-	file, err := os.Open(statementPath)
+	f, err := os.Open(statementPath)
 	if err != nil {
 		log.Fatalf("open statement: %v", err)
 	}
-	defer file.Close()
+	defer f.Close()
 
 	fmt.Printf("Unfolding %s account...\n", cfg.BankName)
 
-	transactions, err := bankParser.Parse(file, cfg)
+	transactions, err := bankParser.Parse(f, cfg)
 	if err != nil {
 		log.Fatalf("parse statement: %v", err)
 	}
 
-	matched := matcher.Filter(transactions, cfg.NormalizedKeywords())
+	matched := matcher.Filter(transactions, cfg.NormalizedKeywords(), cfg.NormalizedExcludeKeywords())
 
 	rpt := report.Build(cfg.BankName, matched)
 	outputPath := report.PathFor(statementPath)

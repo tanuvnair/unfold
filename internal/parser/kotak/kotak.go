@@ -39,6 +39,11 @@ func (p *Parser) Parse(r io.Reader, cfg config.Config) ([]txn.Transaction, error
 		return nil, fmt.Errorf("find column header: %w", err)
 	}
 
+	descIdx, err := parser.ResolveColumnIndex(header, cfg.DescriptionColumn)
+	if err != nil {
+		return nil, fmt.Errorf("resolve description column: %w", err)
+	}
+
 	var transactions []txn.Transaction
 	for {
 		record, err := reader.Read()
@@ -51,7 +56,7 @@ func (p *Parser) Parse(r io.Reader, cfg config.Config) ([]txn.Transaction, error
 		if !isTransactionRow(record, len(header)) {
 			continue
 		}
-		transactions = append(transactions, toTransaction(header, record, cfg.DescriptionColumnIndex))
+		transactions = append(transactions, toTransaction(header, record, descIdx))
 	}
 
 	return transactions, nil
@@ -123,8 +128,6 @@ func toTransaction(header, record []string, descIdx int) txn.Transaction {
 	description := ""
 	if descIdx >= 0 && descIdx < len(record) {
 		description = strings.TrimSpace(record[descIdx])
-	} else {
-		description = strings.Join(record, " ")
 	}
 
 	return txn.Transaction{
