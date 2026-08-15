@@ -10,38 +10,6 @@ const pageWidth: Record<PageSize, string> = {
   lg: 'max-w-5xl',
 };
 
-function UnfoldMark({className}: {className?: string}) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-      className={cn('size-6', className)}
-    >
-      <rect
-        x="4.5"
-        y="3.5"
-        width="13"
-        height="13"
-        rx="2.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <rect
-        x="6.5"
-        y="7.5"
-        width="13"
-        height="13"
-        rx="2.5"
-        fill="currentColor"
-        fillOpacity="0.12"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-    </svg>
-  );
-}
-
 export function BrandLockup() {
   return (
     <Link
@@ -49,9 +17,7 @@ export function BrandLockup() {
       aria-label="unfold home"
       className="flex w-fit items-center gap-3 text-foreground"
     >
-      <span className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
-        <UnfoldMark />
-      </span>
+      <img src="/favicon.svg" alt="" className="size-12" />
       <span className="font-heading text-2xl font-semibold tracking-tight">
         unfold
       </span>
