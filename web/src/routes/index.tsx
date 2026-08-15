@@ -21,6 +21,7 @@ import {Skeleton} from '@/components/ui/skeleton';
 import {Spinner} from '@/components/ui/spinner';
 import {analyzeStatement, fetchBanks} from '@/lib/api';
 import {setLatestReport} from '@/lib/report-store';
+import {resultsSearchDefaults} from '@/lib/results-search';
 
 export const Route = createFileRoute('/')({
   component: HomePage,
@@ -57,7 +58,7 @@ function HomePage() {
     },
     onSuccess: (report) => {
       setLatestReport(report);
-      void navigate({to: '/results'});
+      void navigate({to: '/results', search: resultsSearchDefaults});
     },
   });
 
@@ -96,7 +97,7 @@ function HomePage() {
   }
 
   return (
-    <Page size="md" className="flex min-h-svh flex-col justify-center gap-8">
+    <Page size="md" className="flex flex-col gap-8">
       <div className="flex flex-col gap-6">
         <BrandLockup />
         <div className="flex flex-col gap-2">

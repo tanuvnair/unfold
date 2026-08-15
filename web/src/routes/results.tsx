@@ -1,7 +1,8 @@
-import {createFileRoute, Link, redirect} from '@tanstack/react-router';
+import {createFileRoute, Link, redirect, stripSearchParams} from '@tanstack/react-router';
 import {HugeiconsIcon} from '@hugeicons/react';
 import {SearchRemoveIcon} from '@hugeicons/core-free-icons';
 
+import {MatchedTransactionsTable} from '@/components/matched-transactions/table';
 import {BrandLockup, Page} from '@/components/layout/page';
 import {Badge} from '@/components/ui/badge';
 import {Button} from '@/components/ui/button';
@@ -19,24 +20,17 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {getLatestReport} from '@/lib/report-store';
-
-const DISPLAY_COLUMNS = [
-  'Transaction Date',
-  'Description',
-  'Amount',
-  'Dr / Cr',
-] as const;
+import {
+  parseResultsSearch,
+  resultsSearchDefaults,
+} from '@/lib/results-search';
 
 export const Route = createFileRoute('/results')({
+  validateSearch: parseResultsSearch,
+  search: {
+    middlewares: [stripSearchParams(resultsSearchDefaults)],
+  },
   beforeLoad: () => {
     if (!getLatestReport()) {
       throw redirect({to: '/'});
@@ -81,7 +75,7 @@ function ResultsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {report.transactions.length === 0 ? (
+          {report.transaction_count === 0 ? (
             <Empty className="border">
               <EmptyHeader>
                 <EmptyMedia variant="icon">
@@ -94,37 +88,7 @@ function ResultsPage() {
               </EmptyHeader>
             </Empty>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {DISPLAY_COLUMNS.map((col) => (
-                    <TableHead key={col}>{col}</TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {report.transactions.map((row, i) => (
-                  <TableRow key={`${row['Sl. No.'] ?? i}-${row.Description}`}>
-                    {DISPLAY_COLUMNS.map((col) => (
-                      <TableCell
-                        key={col}
-                        className={
-                          col === 'Description' ? 'max-w-md' : undefined
-                        }
-                      >
-                        <span
-                          className={
-                            col === 'Description' ? 'break-all' : undefined
-                          }
-                        >
-                          {row[col] ?? '—'}
-                        </span>
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <MatchedTransactionsTable report={report} />
           )}
         </CardContent>
       </Card>

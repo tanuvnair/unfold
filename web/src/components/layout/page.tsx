@@ -49,7 +49,7 @@ export function BrandLockup() {
       aria-label="unfold home"
       className="flex w-fit items-center gap-3 text-foreground"
     >
-      <span className="flex size-12 items-center justify-center rounded-xl bg-muted ring-1 ring-foreground/5">
+      <span className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
         <UnfoldMark />
       </span>
       <span className="font-heading text-2xl font-semibold tracking-tight">

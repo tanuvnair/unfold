@@ -4,16 +4,37 @@ export type Bank = {
   has_parser: boolean;
 };
 
-export type TransactionRow = Record<string, string>;
-
 export type Report = {
+  id: string;
   bank_name: string;
   transaction_count: number;
-  transactions: TransactionRow[];
+};
+
+export type TransactionTypeFilter = 'all' | 'DR' | 'CR';
+
+export type MatchedTransaction = {
+  id: string;
+  transactionDate: string;
+  description: string;
+  amount: string;
+  type: string;
 };
 
 export type ApiError = {
   error: string;
+};
+
+type TransactionPageResponse = {
+  rows: Array<{
+    id: string;
+    transaction_date: string;
+    description: string;
+    amount: string;
+    type: string;
+  }>;
+  row_count: number;
+  page: number;
+  page_size: number;
 };
 
 /** Absolute API origin for split deployments, or "" for same-origin `/api`. */
@@ -67,4 +88,43 @@ export async function analyzeStatement(
     throw new Error(await readError(res));
   }
   return (await res.json()) as Report;
+}
+
+export async function fetchReportTransactions(
+  id: string,
+  params: {
+    q: string;
+    type: TransactionTypeFilter;
+    page: number;
+    pageSize: number;
+  },
+): Promise<{rows: MatchedTransaction[]; rowCount: number}> {
+  const search = new URLSearchParams({
+    page: String(params.page),
+    page_size: String(params.pageSize),
+  });
+  if (params.q.trim()) {
+    search.set('q', params.q.trim());
+  }
+  if (params.type !== 'all') {
+    search.set('type', params.type);
+  }
+
+  const res = await fetch(
+    apiURL(`/api/reports/${encodeURIComponent(id)}/transactions?${search}`),
+  );
+  if (!res.ok) {
+    throw new Error(await readError(res));
+  }
+  const data = (await res.json()) as TransactionPageResponse;
+  return {
+    rows: (data.rows ?? []).map((row) => ({
+      id: row.id,
+      transactionDate: row.transaction_date,
+      description: row.description,
+      amount: row.amount,
+      type: row.type,
+    })),
+    rowCount: data.row_count,
+  };
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/tanuvnair/unfold/internal/config"
 	"github.com/tanuvnair/unfold/internal/parser"
 	_ "github.com/tanuvnair/unfold/internal/parser/kotak"
+	"github.com/tanuvnair/unfold/internal/reportquery"
 	"github.com/tanuvnair/unfold/internal/webui"
 )
 
@@ -35,12 +36,13 @@ func main() {
 		log.Fatalf("load config: %v", err)
 	}
 
-	srv := &server{profiles: file}
+	srv := &server{profiles: file, reports: reportquery.NewStore()}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/health", srv.handleHealth)
 	mux.HandleFunc("GET /api/banks", srv.handleBanks)
 	mux.HandleFunc("POST /api/analyze", srv.handleAnalyze)
+	mux.HandleFunc("GET /api/reports/{id}/transactions", srv.handleReportTransactions)
 	if webui.HasUI() {
 		mux.Handle("/", webui.Handler())
 	}
@@ -82,6 +84,13 @@ func envOr(key, fallback string) string {
 
 type server struct {
 	profiles config.File
+	reports  *reportquery.Store
+}
+
+type analyzeResponse struct {
+	ID               string `json:"id"`
+	BankName         string `json:"bank_name"`
+	TransactionCount int    `json:"transaction_count"`
 }
 
 type bankInfo struct {
@@ -154,7 +163,16 @@ func (s *server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, rpt)
+	id, err := s.reports.Put(rpt)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not store report")
+		return
+	}
+	writeJSON(w, http.StatusOK, analyzeResponse{
+		ID:               id,
+		BankName:         rpt.BankName,
+		TransactionCount: rpt.TransactionCount,
+	})
 }
 
 func isAllowedCSVContentType(ct string) bool {
