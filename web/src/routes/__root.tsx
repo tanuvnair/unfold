@@ -1,8 +1,6 @@
 import {Outlet, createRootRoute} from '@tanstack/react-router';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 
-import {AppHeader} from '@/components/layout/page';
-
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -20,7 +18,6 @@ function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="flex min-h-svh flex-col bg-background">
-        <AppHeader />
         <div className="flex flex-1 flex-col">
           <Outlet />
         </div>

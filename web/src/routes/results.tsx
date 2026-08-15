@@ -2,7 +2,7 @@ import {createFileRoute, Link, redirect} from '@tanstack/react-router';
 import {HugeiconsIcon} from '@hugeicons/react';
 import {SearchRemoveIcon} from '@hugeicons/core-free-icons';
 
-import {Page} from '@/components/layout/page';
+import {BrandLockup, Page} from '@/components/layout/page';
 import {Badge} from '@/components/ui/badge';
 import {Button} from '@/components/ui/button';
 import {
@@ -53,6 +53,7 @@ function ResultsPage() {
 
   return (
     <Page size="lg" className="flex flex-col gap-8">
+      <BrandLockup />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-3">

@@ -1,4 +1,5 @@
 import {Link} from '@tanstack/react-router';
+import type {ReactNode} from 'react';
 
 import {cn} from '@/lib/utils';
 
@@ -9,18 +10,52 @@ const pageWidth: Record<PageSize, string> = {
   lg: 'max-w-5xl',
 };
 
-export function AppHeader() {
+function UnfoldMark({className}: {className?: string}) {
   return (
-    <header className="border-b">
-      <div className="mx-auto flex h-14 w-full max-w-5xl items-center px-6">
-        <Link
-          to="/"
-          className="font-heading text-lg font-semibold tracking-tight text-foreground"
-        >
-          unfold
-        </Link>
-      </div>
-    </header>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      className={cn('size-6', className)}
+    >
+      <rect
+        x="4.5"
+        y="3.5"
+        width="13"
+        height="13"
+        rx="2.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <rect
+        x="6.5"
+        y="7.5"
+        width="13"
+        height="13"
+        rx="2.5"
+        fill="currentColor"
+        fillOpacity="0.12"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+    </svg>
+  );
+}
+
+export function BrandLockup() {
+  return (
+    <Link
+      to="/"
+      aria-label="unfold home"
+      className="flex w-fit items-center gap-3 text-foreground"
+    >
+      <span className="flex size-12 items-center justify-center rounded-xl bg-muted ring-1 ring-foreground/5">
+        <UnfoldMark />
+      </span>
+      <span className="font-heading text-2xl font-semibold tracking-tight">
+        unfold
+      </span>
+    </Link>
   );
 }
 
@@ -29,7 +64,7 @@ export function Page({
   size = 'md',
   className,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   size?: PageSize;
   className?: string;
 }) {

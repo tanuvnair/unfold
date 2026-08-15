@@ -1,31 +1,14 @@
 import {useEffect, useMemo, useState} from 'react';
 import {createFileRoute, useNavigate} from '@tanstack/react-router';
 import {useMutation, useQuery} from '@tanstack/react-query';
-import {HugeiconsIcon} from '@hugeicons/react';
-import {Upload01Icon} from '@hugeicons/core-free-icons';
 
-import {Page} from '@/components/layout/page';
+import {BrandLockup, Page} from '@/components/layout/page';
+import {StatementDropzone} from '@/components/statement-dropzone';
+import {validateStatementFile} from '@/lib/statement-file';
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
 import {Button} from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from '@/components/ui/field';
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from '@/components/ui/input-group';
+import {Card, CardContent, CardFooter} from '@/components/ui/card';
+import {Field, FieldGroup, FieldLabel} from '@/components/ui/field';
 import {
   Select,
   SelectContent,
@@ -47,6 +30,7 @@ function HomePage() {
   const navigate = useNavigate();
   const [bank, setBank] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   const banksQuery = useQuery({
     queryKey: ['banks'],
@@ -93,26 +77,39 @@ function HomePage() {
 
   const pending = analyzeMutation.isPending;
   const canSubmit =
-    Boolean(file && bank) && selectableBanks.length > 0 && !pending;
+    Boolean(file && bank) && selectableBanks.length > 0 && !pending && !fileError;
+
+  function handleFile(next: File | null) {
+    if (!next) {
+      setFile(null);
+      setFileError(null);
+      return;
+    }
+    const error = validateStatementFile(next);
+    if (error) {
+      setFile(null);
+      setFileError(error);
+      return;
+    }
+    setFile(next);
+    setFileError(null);
+  }
 
   return (
-    <Page size="md" className="flex flex-col gap-8">
-      <div className="flex flex-col gap-2">
-        <h1 className="font-heading text-3xl font-semibold tracking-tight">
-          Find hidden subscriptions
-        </h1>
-        <p className="text-muted-foreground">
-          Upload a bank statement CSV to surface autopay and mandate charges.
-        </p>
+    <Page size="md" className="flex min-h-svh flex-col justify-center gap-8">
+      <div className="flex flex-col gap-6">
+        <BrandLockup />
+        <div className="flex flex-col gap-2">
+          <h1 className="font-heading text-3xl font-semibold tracking-tight">
+            Find hidden subscriptions
+          </h1>
+          <p className="text-muted-foreground">
+            Upload a bank statement CSV to surface autopay and mandate charges.
+          </p>
+        </div>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Analyze statement</CardTitle>
-          <CardDescription>
-            Choose a bank profile, then upload the statement export.
-          </CardDescription>
-        </CardHeader>
         <CardContent>
           <form
             id="analyze-form"
@@ -155,28 +152,18 @@ function HomePage() {
                 </Field>
               )}
 
-              <Field>
+              <Field
+                data-invalid={fileError ? true : undefined}
+                data-disabled={pending || undefined}
+              >
                 <FieldLabel htmlFor="statement">Statement CSV</FieldLabel>
-                <InputGroup>
-                  <InputGroupAddon>
-                    <HugeiconsIcon icon={Upload01Icon} strokeWidth={2} />
-                  </InputGroupAddon>
-                  <InputGroupInput
-                    id="statement"
-                    type="file"
-                    accept=".csv,text/csv"
-                    onChange={(e) => {
-                      setFile(e.target.files?.[0] ?? null);
-                    }}
-                  />
-                </InputGroup>
-                {file ? (
-                  <FieldDescription>Selected: {file.name}</FieldDescription>
-                ) : (
-                  <FieldDescription>
-                    Supported bank statement exports (.csv).
-                  </FieldDescription>
-                )}
+                <StatementDropzone
+                  id="statement"
+                  file={file}
+                  disabled={pending}
+                  invalid={Boolean(fileError)}
+                  onFile={handleFile}
+                />
               </Field>
 
               {banksQuery.isError ? (
@@ -185,6 +172,13 @@ function HomePage() {
                   <AlertDescription>
                     {(banksQuery.error as Error).message}. Is the API running?
                   </AlertDescription>
+                </Alert>
+              ) : null}
+
+              {fileError ? (
+                <Alert variant="destructive">
+                  <AlertTitle>Could not attach file</AlertTitle>
+                  <AlertDescription>{fileError}</AlertDescription>
                 </Alert>
               ) : null}
 
