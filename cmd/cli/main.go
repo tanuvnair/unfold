@@ -6,9 +6,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/tanuvnair/unfold/internal/analyze"
 	"github.com/tanuvnair/unfold/internal/config"
-	"github.com/tanuvnair/unfold/internal/matcher"
-	"github.com/tanuvnair/unfold/internal/parser"
 	_ "github.com/tanuvnair/unfold/internal/parser/kotak"
 	"github.com/tanuvnair/unfold/internal/report"
 )
@@ -41,11 +40,6 @@ func main() {
 		log.Fatalf("select profile: %v", err)
 	}
 
-	bankParser, err := parser.Get(cfg.BankKey())
-	if err != nil {
-		log.Fatalf("select parser: %v", err)
-	}
-
 	f, err := os.Open(statementPath)
 	if err != nil {
 		log.Fatalf("open statement: %v", err)
@@ -54,14 +48,11 @@ func main() {
 
 	fmt.Printf("Unfolding %s account...\n", cfg.BankName)
 
-	transactions, err := bankParser.Parse(f, cfg)
+	rpt, err := analyze.Run(cfg, f)
 	if err != nil {
-		log.Fatalf("parse statement: %v", err)
+		log.Fatalf("analyze: %v", err)
 	}
 
-	matched := matcher.Filter(transactions, cfg.NormalizedKeywords(), cfg.NormalizedExcludeKeywords())
-
-	rpt := report.Build(cfg.BankName, matched)
 	outputPath := report.PathFor(statementPath)
 
 	if *diffFlag {
@@ -69,13 +60,13 @@ func main() {
 	}
 
 	if *verboseFlag {
-		for _, t := range matched {
-			fmt.Println(t.Description)
+		for _, row := range rpt.Transactions {
+			fmt.Println(report.DescriptionOf(row))
 		}
 	}
 
 	if *dryRunFlag {
-		fmt.Printf("Audit complete. Found %d autopay transactions.\n", len(matched))
+		fmt.Printf("Audit complete. Found %d autopay transactions.\n", rpt.TransactionCount)
 		fmt.Printf("Dry run: skipped writing %s\n", outputPath)
 		return
 	}
@@ -84,7 +75,7 @@ func main() {
 		log.Fatalf("write output: %v", err)
 	}
 
-	fmt.Printf("Audit complete. Found %d autopay transactions.\n", len(matched))
+	fmt.Printf("Audit complete. Found %d autopay transactions.\n", rpt.TransactionCount)
 	fmt.Printf("Report written to %s\n", outputPath)
 }
 
