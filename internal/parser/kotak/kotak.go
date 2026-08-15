@@ -112,17 +112,24 @@ func isTransactionRow(record []string, expectedCols int) bool {
 }
 
 func toTransaction(header, record []string, descIdx int) txn.Transaction {
-	fields := make(map[string]string, len(header))
+	fields := make(txn.Fields, 0, len(header))
+	indexByName := make(map[string]int, len(header))
 	for i, col := range header {
 		col = strings.TrimSpace(col)
 		if col == "" {
 			col = fmt.Sprintf("column_%d", i+1)
 		}
+		value := ""
 		if i < len(record) {
-			fields[col] = strings.TrimSpace(record[i])
-		} else {
-			fields[col] = ""
+			value = strings.TrimSpace(record[i])
 		}
+		// Duplicate headers: last wins (mirrors the old map behavior).
+		if idx, ok := indexByName[col]; ok {
+			fields[idx].Value = value
+			continue
+		}
+		indexByName[col] = len(fields)
+		fields = append(fields, txn.Field{Name: col, Value: value})
 	}
 
 	description := ""
