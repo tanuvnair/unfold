@@ -9,20 +9,31 @@ import (
 	"github.com/tanuvnair/unfold/internal/txn"
 )
 
-// Filter returns only the transactions whose Description contains at least
-// one of the given (already normalized, upper-case) keywords.
-func Filter(transactions []txn.Transaction, normalizedKeywords []string) []txn.Transaction {
+// Filter returns transactions whose Description contains at least one
+// include keyword and none of the exclude keywords. Both slices must already
+// be normalized (upper-case, blanks removed).
+func Filter(transactions []txn.Transaction, include, exclude []string) []txn.Transaction {
 	var matched []txn.Transaction
 	for _, t := range transactions {
-		if matches(t, normalizedKeywords) {
+		if matches(t, include, exclude) {
 			matched = append(matched, t)
 		}
 	}
 	return matched
 }
 
-func matches(t txn.Transaction, keywords []string) bool {
+func matches(t txn.Transaction, include, exclude []string) bool {
 	description := strings.ToUpper(t.Description)
+	if !containsAny(description, include) {
+		return false
+	}
+	if containsAny(description, exclude) {
+		return false
+	}
+	return true
+}
+
+func containsAny(description string, keywords []string) bool {
 	for _, kw := range keywords {
 		if strings.Contains(description, kw) {
 			return true

@@ -39,6 +39,11 @@ func (p *Parser) Parse(r io.Reader, cfg config.Config) ([]txn.Transaction, error
 		return nil, fmt.Errorf("find column header: %w", err)
 	}
 
+	descIdx, err := parser.ResolveColumnIndex(header, cfg.DescriptionColumn)
+	if err != nil {
+		return nil, fmt.Errorf("resolve description column: %w", err)
+	}
+
 	var transactions []txn.Transaction
 	for {
 		record, err := reader.Read()
@@ -51,7 +56,7 @@ func (p *Parser) Parse(r io.Reader, cfg config.Config) ([]txn.Transaction, error
 		if !isTransactionRow(record, len(header)) {
 			continue
 		}
-		transactions = append(transactions, toTransaction(header, record, cfg.DescriptionColumnIndex))
+		transactions = append(transactions, toTransaction(header, record, descIdx))
 	}
 
 	return transactions, nil
@@ -107,24 +112,29 @@ func isTransactionRow(record []string, expectedCols int) bool {
 }
 
 func toTransaction(header, record []string, descIdx int) txn.Transaction {
-	fields := make(map[string]string, len(header))
+	fields := make(txn.Fields, 0, len(header))
+	indexByName := make(map[string]int, len(header))
 	for i, col := range header {
 		col = strings.TrimSpace(col)
 		if col == "" {
 			col = fmt.Sprintf("column_%d", i+1)
 		}
+		value := ""
 		if i < len(record) {
-			fields[col] = strings.TrimSpace(record[i])
-		} else {
-			fields[col] = ""
+			value = strings.TrimSpace(record[i])
 		}
+		// Duplicate headers: last wins (mirrors the old map behavior).
+		if idx, ok := indexByName[col]; ok {
+			fields[idx].Value = value
+			continue
+		}
+		indexByName[col] = len(fields)
+		fields = append(fields, txn.Field{Name: col, Value: value})
 	}
 
 	description := ""
 	if descIdx >= 0 && descIdx < len(record) {
 		description = strings.TrimSpace(record[descIdx])
-	} else {
-		description = strings.Join(record, " ")
 	}
 
 	return txn.Transaction{
