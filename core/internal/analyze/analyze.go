@@ -5,6 +5,7 @@ package analyze
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/tanuvnair/unfold/internal/config"
 	"github.com/tanuvnair/unfold/internal/matcher"
@@ -33,10 +34,35 @@ func Run(cfg config.Config, statement io.Reader) (report.Report, error) {
 		cfg.NormalizedKeywords(),
 		cfg.NormalizedExcludeKeywords(),
 	)
-	recHits := recurrence.DetectRecurring(recurrence.GroupByPayee(transactions))
+	recHits := recurrence.DetectRecurring(
+		recurrence.GroupByPayee(
+			excludeDescriptions(transactions, cfg.NormalizedExcludeKeywords()),
+		),
+	)
 
 	entries := merge(keywordHits, recHits)
 	return report.Build(cfg.BankName, entries), nil
+}
+
+func excludeDescriptions(transactions []txn.Transaction, exclude []string) []txn.Transaction {
+	if len(exclude) == 0 {
+		return transactions
+	}
+	out := make([]txn.Transaction, 0, len(transactions))
+	for _, t := range transactions {
+		desc := strings.ToUpper(t.Description)
+		skip := false
+		for _, kw := range exclude {
+			if strings.Contains(desc, kw) {
+				skip = true
+				break
+			}
+		}
+		if !skip {
+			out = append(out, t)
+		}
+	}
+	return out
 }
 
 type pending struct {

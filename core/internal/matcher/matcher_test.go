@@ -10,8 +10,8 @@ import (
 
 func TestFilter_IncludeHit(t *testing.T) {
 	txns := []txn.Transaction{
-		{Description: "UPI payment to friend"},
-		{Description: "NACH debit Mutual Fund"},
+		{Description: "UPI payment to friend", Type: "DR"},
+		{Description: "NACH debit Mutual Fund", Type: "DR"},
 	}
 	got := matcher.Filter(txns, []config.KeywordRule{{Term: "NACH", Tier: "high"}}, nil)
 	if len(got) != 1 {
@@ -25,10 +25,24 @@ func TestFilter_IncludeHit(t *testing.T) {
 	}
 }
 
+func TestFilter_SkipsCredits(t *testing.T) {
+	txns := []txn.Transaction{
+		{Description: "NACH MANDATE REFUND Apple", Type: "CR"},
+		{Description: "NACH SIP mutual fund", Type: "DR"},
+	}
+	got := matcher.Filter(txns, []config.KeywordRule{{Term: "NACH", Tier: "high"}}, nil)
+	if len(got) != 1 {
+		t.Fatalf("got %d matches, want 1 (credits skipped)", len(got))
+	}
+	if got[0].Transaction.Description != "NACH SIP mutual fund" {
+		t.Fatalf("unexpected match: %q", got[0].Transaction.Description)
+	}
+}
+
 func TestFilter_ExcludeSuppressesFalsePositive(t *testing.T) {
 	txns := []txn.Transaction{
-		{Description: "NACH-REF-999 one-off transfer"},
-		{Description: "NACH SIP mutual fund"},
+		{Description: "NACH-REF-999 one-off transfer", Type: "DR"},
+		{Description: "NACH SIP mutual fund", Type: "DR"},
 	}
 	got := matcher.Filter(txns, []config.KeywordRule{{Term: "NACH", Tier: "high"}}, []string{"ONE-OFF"})
 	if len(got) != 1 {
@@ -39,8 +53,22 @@ func TestFilter_ExcludeSuppressesFalsePositive(t *testing.T) {
 	}
 }
 
+func TestFilter_ExcludeRefund(t *testing.T) {
+	txns := []txn.Transaction{
+		{Description: "UPI/APPLE MEDIA SER REFUND/1024/Mandate", Type: "DR"},
+	}
+	got := matcher.Filter(
+		txns,
+		[]config.KeywordRule{{Term: "MANDATE", Tier: "high"}},
+		[]string{"REFUND"},
+	)
+	if len(got) != 0 {
+		t.Fatalf("got %d matches, want 0 for refund", len(got))
+	}
+}
+
 func TestFilter_NoIncludeNoMatch(t *testing.T) {
-	txns := []txn.Transaction{{Description: "grocery store"}}
+	txns := []txn.Transaction{{Description: "grocery store", Type: "DR"}}
 	got := matcher.Filter(txns, []config.KeywordRule{{Term: "NACH", Tier: "high"}}, nil)
 	if len(got) != 0 {
 		t.Fatalf("got %d matches, want 0", len(got))
@@ -49,7 +77,7 @@ func TestFilter_NoIncludeNoMatch(t *testing.T) {
 
 func TestFilter_HighestTierWins(t *testing.T) {
 	txns := []txn.Transaction{
-		{Description: "NACH RECURRING SIP debit"},
+		{Description: "NACH RECURRING SIP debit", Type: "DR"},
 	}
 	got := matcher.Filter(txns, []config.KeywordRule{
 		{Term: "RECURRING", Tier: "medium"},
@@ -65,7 +93,7 @@ func TestFilter_HighestTierWins(t *testing.T) {
 
 func TestFilter_ExcludeWinsOverHighTierInclude(t *testing.T) {
 	txns := []txn.Transaction{
-		{Description: "NACH one-off transfer"},
+		{Description: "NACH one-off transfer", Type: "DR"},
 	}
 	got := matcher.Filter(txns, []config.KeywordRule{{Term: "NACH", Tier: "high"}}, []string{"ONE-OFF"})
 	if len(got) != 0 {

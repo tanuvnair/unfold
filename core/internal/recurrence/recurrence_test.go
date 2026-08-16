@@ -22,11 +22,18 @@ func TestNormalizePayee_StripsDatesAndRefs(t *testing.T) {
 	}
 }
 
+func TestNormalizePayee_StripsRefundNoise(t *testing.T) {
+	got := recurrence.NormalizePayee("UPI/APPLE MEDIA SER REFUND/1024/Mandate")
+	if got != "APPLE MEDIA SER" {
+		t.Fatalf("got %q, want APPLE MEDIA SER", got)
+	}
+}
+
 func TestGroupByPayee(t *testing.T) {
 	txns := []txn.Transaction{
-		{Description: "UPI/Netflix/1111/Payment"},
-		{Description: "UPI/Netflix/2222/Payment"},
-		{Description: "UPI/Spotify/3333/Payment"},
+		{Description: "UPI/Netflix/1111/Payment", Type: "DR"},
+		{Description: "UPI/Netflix/2222/Payment", Type: "DR"},
+		{Description: "UPI/Spotify/3333/Payment", Type: "DR"},
 	}
 	groups := recurrence.GroupByPayee(txns)
 	if len(groups) != 2 {
@@ -41,11 +48,23 @@ func TestGroupByPayee(t *testing.T) {
 	}
 }
 
+func TestGroupByPayee_SkipsCredits(t *testing.T) {
+	txns := []txn.Transaction{
+		{Description: "UPI/Netflix/1111/Payment", Type: "DR"},
+		{Description: "UPI/Netflix/2222/Refund", Type: "CR"},
+		{Description: "UPI/Netflix/3333/Payment", Type: "DR"},
+	}
+	groups := recurrence.GroupByPayee(txns)
+	if len(groups) != 1 || len(groups[0].Transactions) != 2 {
+		t.Fatalf("got %+v, want 1 group with 2 DR rows", groups)
+	}
+}
+
 func monthly(payee string, amount float64, months int) []txn.Transaction {
 	var out []txn.Transaction
 	for i := 0; i < months; i++ {
 		out = append(out, txn.Transaction{
-			Description: "UPI/" + payee + "/8823" + string(rune('0'+i)) + "/Payment",
+			Description: "UPI/" + payee + "/88230" + string(rune('0'+i)) + "/Payment",
 			Amount:      amount,
 			Date:        time.Date(2025, time.Month(1+i), 5, 10, 0, 0, 0, time.UTC),
 			Type:        "DR",
@@ -70,14 +89,71 @@ func TestDetectRecurring_HighConfidenceThreeHits(t *testing.T) {
 	}
 }
 
-func TestDetectRecurring_MediumConfidenceTwoHits(t *testing.T) {
-	groups := recurrence.GroupByPayee(monthly("Netflix", 199, 2))
+func TestDetectRecurring_MediumConfidenceLooseIntervals(t *testing.T) {
+	txns := []txn.Transaction{
+		{
+			Description: "UPI/Spotify/1111/Payment",
+			Amount:      119,
+			Date:        time.Date(2025, 1, 1, 10, 0, 0, 0, time.UTC),
+			Type:        "DR",
+		},
+		{
+			Description: "UPI/Spotify/2222/Payment",
+			Amount:      119,
+			Date:        time.Date(2025, 1, 22, 10, 0, 0, 0, time.UTC),
+			Type:        "DR",
+		},
+		{
+			Description: "UPI/Spotify/3333/Payment",
+			Amount:      119,
+			Date:        time.Date(2025, 2, 28, 10, 0, 0, 0, time.UTC),
+			Type:        "DR",
+		},
+	}
+	groups := recurrence.GroupByPayee(txns)
 	got := recurrence.DetectRecurring(groups)
 	if len(got) != 1 {
 		t.Fatalf("got %d detections, want 1", len(got))
 	}
 	if got[0].Confidence != "medium" {
 		t.Fatalf("confidence=%q want medium", got[0].Confidence)
+	}
+}
+
+func TestDetectRecurring_RejectsTwoHits(t *testing.T) {
+	groups := recurrence.GroupByPayee(monthly("Netflix", 199, 2))
+	got := recurrence.DetectRecurring(groups)
+	if len(got) != 0 {
+		t.Fatalf("got %d detections, want 0 for only two spaced hits", len(got))
+	}
+}
+
+func TestDetectRecurring_RejectsSameDayRetries(t *testing.T) {
+	// One purchase in April, then a same-day double tap in June — not monthly.
+	txns := []txn.Transaction{
+		{
+			Description: "UPI/HEADPHONE ZONE/1111/PaymenttoHEADPH",
+			Amount:      2199,
+			Date:        time.Date(2026, 4, 5, 22, 23, 51, 0, time.UTC),
+			Type:        "DR",
+		},
+		{
+			Description: "UPI/HEADPHONE ZONE/2222/PaymenttoHEADPH",
+			Amount:      2189,
+			Date:        time.Date(2026, 6, 10, 23, 4, 11, 0, time.UTC),
+			Type:        "DR",
+		},
+		{
+			Description: "UPI/HEADPHONE ZONE/3333/PaymentToHEADPH",
+			Amount:      2189,
+			Date:        time.Date(2026, 6, 10, 23, 5, 9, 0, time.UTC),
+			Type:        "DR",
+		},
+	}
+	groups := recurrence.GroupByPayee(txns)
+	got := recurrence.DetectRecurring(groups)
+	if len(got) != 0 {
+		t.Fatalf("got %d detections, want 0 for same-day UPI retries", len(got))
 	}
 }
 
@@ -97,5 +173,33 @@ func TestDetectRecurring_RejectsUnstableAmount(t *testing.T) {
 	got := recurrence.DetectRecurring(groups)
 	if len(got) != 0 {
 		t.Fatalf("got %d detections, want 0 for unstable amount", len(got))
+	}
+}
+
+func TestDetectRecurring_RejectsWideGaps(t *testing.T) {
+	txns := []txn.Transaction{
+		{
+			Description: "UPI/Shop/1111/Payment",
+			Amount:      200,
+			Date:        time.Date(2025, 1, 1, 10, 0, 0, 0, time.UTC),
+			Type:        "DR",
+		},
+		{
+			Description: "UPI/Shop/2222/Payment",
+			Amount:      200,
+			Date:        time.Date(2025, 3, 15, 10, 0, 0, 0, time.UTC),
+			Type:        "DR",
+		},
+		{
+			Description: "UPI/Shop/3333/Payment",
+			Amount:      200,
+			Date:        time.Date(2025, 6, 1, 10, 0, 0, 0, time.UTC),
+			Type:        "DR",
+		},
+	}
+	groups := recurrence.GroupByPayee(txns)
+	got := recurrence.DetectRecurring(groups)
+	if len(got) != 0 {
+		t.Fatalf("got %d detections, want 0 for non-monthly gaps", len(got))
 	}
 }

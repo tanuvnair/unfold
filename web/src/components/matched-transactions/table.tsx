@@ -61,16 +61,9 @@ import {
   type Report,
   type SourceFilter,
   type SummaryGroup,
-  type TransactionTypeFilter,
 } from '@/lib/api';
 import {useDebouncedValue} from '@/hooks/use-debounced-value';
 import type {ResultsView} from '@/lib/results-search';
-
-const TYPE_ITEMS: Array<{label: string; value: TransactionTypeFilter}> = [
-  {label: 'All', value: 'all'},
-  {label: 'DR', value: 'DR'},
-  {label: 'CR', value: 'CR'},
-];
 
 const CONFIDENCE_ITEMS: Array<{label: string; value: ConfidenceFilter}> = [
   {label: 'All', value: 'all'},
@@ -109,9 +102,6 @@ function ResultsFilters({
   const search = useSearch({from: '/results'});
   const navigate = useNavigate({from: '/results'});
 
-  function setType(type: TransactionTypeFilter) {
-    void navigate({search: (prev) => ({...prev, type, page: 1})});
-  }
   function setConfidence(confidence: ConfidenceFilter) {
     void navigate({search: (prev) => ({...prev, confidence, page: 1})});
   }
@@ -214,30 +204,6 @@ function ResultsFilters({
             ))}
           </ToggleGroup>
         </Field>
-        <Field orientation="horizontal" className="w-fit">
-          <FieldLabel className="sr-only" id="txn-type-label">
-            Debit or credit
-          </FieldLabel>
-          <ToggleGroup
-            variant="outline"
-            size="sm"
-            spacing={0}
-            value={[search.type]}
-            aria-labelledby="txn-type-label"
-            onValueChange={(value) => {
-              const next = value[0] as TransactionTypeFilter | undefined;
-              if (next) {
-                setType(next);
-              }
-            }}
-          >
-            {TYPE_ITEMS.map((item) => (
-              <ToggleGroupItem key={item.value} value={item.value}>
-                {item.label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        </Field>
       </FieldGroup>
     </FieldGroup>
   );
@@ -252,7 +218,7 @@ function PayeeGroupRow({report, group}: {report: Report; group: SummaryGroup}) {
     queryFn: () =>
       fetchReportTransactions(report.id, {
         q: '',
-        type: search.type,
+        type: 'DR',
         confidence: search.confidence,
         source: search.source,
         page: 0,
@@ -382,14 +348,13 @@ export function MatchedTransactionsTable({report}: {report: Report}) {
       'report-summary',
       report.id,
       search.q,
-      search.type,
       search.confidence,
       search.source,
     ],
     queryFn: () =>
       fetchReportSummary(report.id, {
         q: search.q,
-        type: search.type,
+        type: 'DR',
         confidence: search.confidence,
         source: search.source,
       }),
@@ -402,7 +367,7 @@ export function MatchedTransactionsTable({report}: {report: Report}) {
     queryFn: () =>
       fetchReportTransactions(report.id, {
         q: search.q,
-        type: search.type,
+        type: 'DR',
         confidence: search.confidence,
         source: search.source,
         page: search.page - 1,

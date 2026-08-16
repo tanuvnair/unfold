@@ -1,8 +1,4 @@
-import type {
-  ConfidenceFilter,
-  SourceFilter,
-  TransactionTypeFilter,
-} from '@/lib/api';
+import type {ConfidenceFilter, SourceFilter} from '@/lib/api';
 
 export const RESULTS_PAGE_SIZES = [10, 20, 25, 50] as const;
 
@@ -10,7 +6,6 @@ export type ResultsView = 'grouped' | 'transactions';
 
 export type ResultsSearch = {
   q: string;
-  type: TransactionTypeFilter;
   confidence: ConfidenceFilter;
   source: SourceFilter;
   view: ResultsView;
@@ -20,7 +15,6 @@ export type ResultsSearch = {
 
 export const resultsSearchDefaults: ResultsSearch = {
   q: '',
-  type: 'all',
   confidence: 'all',
   source: 'all',
   view: 'grouped',
@@ -41,13 +35,6 @@ function parsePageSize(value: unknown): number {
   return (RESULTS_PAGE_SIZES as readonly number[]).includes(n)
     ? n
     : resultsSearchDefaults.pageSize;
-}
-
-function parseType(value: unknown): TransactionTypeFilter {
-  if (value === 'DR' || value === 'CR' || value === 'all') {
-    return value;
-  }
-  return resultsSearchDefaults.type;
 }
 
 function parseConfidence(value: unknown): ConfidenceFilter {
@@ -86,7 +73,6 @@ export function parseResultsSearch(
 ): ResultsSearch {
   return {
     q: typeof search.q === 'string' ? search.q : resultsSearchDefaults.q,
-    type: parseType(search.type),
     confidence: parseConfidence(search.confidence),
     source: parseSource(search.source),
     view: parseView(search.view),

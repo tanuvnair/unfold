@@ -58,16 +58,4 @@ export const columns = columnHelper.columns([
       );
     },
   }),
-  columnHelper.accessor('type', {
-    header: 'Dr / Cr',
-    cell: ({getValue}) => {
-      const type = getValue();
-      if (!type) {
-        return '—';
-      }
-      return (
-        <Badge variant={type === 'CR' ? 'success' : 'destructive'}>{type}</Badge>
-      );
-    },
-  }),
 ]);

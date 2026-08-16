@@ -17,7 +17,13 @@
         { "term": "RECURRING", "tier": "medium" },
         { "term": "MONTHLY INVESTMENT", "tier": "medium" }
       ],
-      "exclude_keywords": []
+      "exclude_keywords": [
+        "REFUND",
+        "REVERSAL",
+        "CHARGEBACK",
+        "CASHBACK",
+        "FAILED"
+      ]
     }
   ]
 }

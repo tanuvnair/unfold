@@ -16,18 +16,19 @@ import (
 )
 
 const (
-	minOccurrences     = 2
-	highMinOccurrences = 3
-	maxAmountVariance  = 0.05 // 5%
-	minIntervalDays    = 25.0
-	maxIntervalDays    = 35.0
-	looseIntervalDays  = 10.0 // half-width around ~30 for medium confidence
+	// At least three spaced debits — two hits (or same-day retries) are too
+	// easy to confuse with one-off UPI purchases.
+	minOccurrences = 3
+	maxAmountVariance = 0.05 // 5%
+	minIntervalDays   = 25.0
+	maxIntervalDays   = 35.0
+	looseIntervalDays = 10.0 // half-width around ~30 for medium confidence
 )
 
 var (
 	digitRunRe   = regexp.MustCompile(`\d{4,}`)
 	dateLikeRe   = regexp.MustCompile(`\b\d{1,2}[-/]\d{1,2}([-/]\d{2,4})?\b`)
-	noiseTokens  = regexp.MustCompile(`\b(UPI|NEFT|IMPS|RTGS|ACH|NACH|MANDATE|AUTOPAY|PAYMENT|PAY|REF|TXN|TRANSFER)\b`)
+	noiseTokens  = regexp.MustCompile(`\b(UPI|NEFT|IMPS|RTGS|ACH|NACH|MANDATE|AUTOPAY|PAYMENT|PAY|REF|TXN|TRANSFER|REFUND|REVERSAL)\b`)
 	slashNoiseRe = regexp.MustCompile(`/+`)
 )
 
@@ -67,12 +68,15 @@ func NormalizePayee(description string) string {
 	return strings.Join(strings.Fields(s), " ")
 }
 
-// GroupByPayee clusters transactions by NormalizePayee(description).
-// Empty tokens are skipped.
+// GroupByPayee clusters debit transactions by NormalizePayee(description).
+// Credits and empty tokens are skipped — autopay charges are outgoing.
 func GroupByPayee(transactions []txn.Transaction) []Group {
 	buckets := make(map[string][]txn.Transaction)
 	order := make([]string, 0)
 	for _, t := range transactions {
+		if isCredit(t) {
+			continue
+		}
 		token := NormalizePayee(t.Description)
 		if token == "" {
 			continue
@@ -101,30 +105,28 @@ func DetectRecurring(groups []Group) []Detection {
 }
 
 func detectGroup(g Group) (Detection, bool) {
-	if len(g.Transactions) < minOccurrences {
-		return Detection{}, false
-	}
-
 	txns := append([]txn.Transaction(nil), g.Transactions...)
 	sort.Slice(txns, func(i, j int) bool {
 		return txns[i].Date.Before(txns[j].Date)
 	})
+	txns = collapseSameCalendarDay(txns)
+	if len(txns) < minOccurrences {
+		return Detection{}, false
+	}
 
 	variance := amountVarianceRatio(txns)
 	if variance > maxAmountVariance {
 		return Detection{}, false
 	}
 
-	avgInterval, tight := intervalStats(txns)
-	if avgInterval <= 0 {
+	avgInterval, tight, loose := intervalStats(txns)
+	if avgInterval <= 0 || !loose {
 		return Detection{}, false
 	}
 
 	confidence := config.TierMedium
-	if len(txns) >= highMinOccurrences && tight {
+	if tight {
 		confidence = config.TierHigh
-	} else if !tight && !looseIntervalFit(avgInterval) {
-		return Detection{}, false
 	}
 
 	return Detection{
@@ -136,6 +138,29 @@ func detectGroup(g Group) (Detection, bool) {
 		AmountVariance:  variance,
 		AvgIntervalDays: avgInterval,
 	}, true
+}
+
+func isCredit(t txn.Transaction) bool {
+	return strings.EqualFold(strings.TrimSpace(t.Type), "CR")
+}
+
+// collapseSameCalendarDay keeps the first debit per UTC calendar day so a
+// failed UPI retry a minute later is not treated as a second monthly hit.
+func collapseSameCalendarDay(txns []txn.Transaction) []txn.Transaction {
+	if len(txns) == 0 {
+		return txns
+	}
+	out := make([]txn.Transaction, 0, len(txns))
+	out = append(out, txns[0])
+	for i := 1; i < len(txns); i++ {
+		prev := out[len(out)-1].Date
+		cur := txns[i].Date
+		if prev.Year() == cur.Year() && prev.YearDay() == cur.YearDay() {
+			continue
+		}
+		out = append(out, txns[i])
+	}
+	return out
 }
 
 func amountVarianceRatio(txns []txn.Transaction) float64 {
@@ -160,9 +185,9 @@ func amountVarianceRatio(txns []txn.Transaction) float64 {
 	return maxDev
 }
 
-func intervalStats(txns []txn.Transaction) (avg float64, tight bool) {
+func intervalStats(txns []txn.Transaction) (avg float64, tight, loose bool) {
 	if len(txns) < 2 {
-		return 0, false
+		return 0, false, false
 	}
 	var sum float64
 	var intervals []float64
@@ -175,20 +200,19 @@ func intervalStats(txns []txn.Transaction) (avg float64, tight bool) {
 		sum += days
 	}
 	if len(intervals) == 0 {
-		return 0, false
+		return 0, false, false
 	}
 	avg = sum / float64(len(intervals))
 	tight = true
+	loose = true
+	center := 30.0
 	for _, d := range intervals {
 		if d < minIntervalDays || d > maxIntervalDays {
 			tight = false
-			break
+		}
+		if d < center-looseIntervalDays || d > center+looseIntervalDays {
+			loose = false
 		}
 	}
-	return avg, tight
-}
-
-func looseIntervalFit(avg float64) bool {
-	center := 30.0
-	return avg >= center-looseIntervalDays && avg <= center+looseIntervalDays
+	return avg, tight, loose
 }

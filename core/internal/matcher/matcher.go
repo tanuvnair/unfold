@@ -32,6 +32,10 @@ func Filter(transactions []txn.Transaction, include []config.KeywordRule, exclud
 }
 
 func match(t txn.Transaction, include []config.KeywordRule, exclude []string) (Match, bool) {
+	// Autopay / mandate hits are outgoing. Credits (refunds) are noise.
+	if strings.EqualFold(strings.TrimSpace(t.Type), "CR") {
+		return Match{}, false
+	}
 	description := strings.ToUpper(t.Description)
 	confidence, term, ok := bestIncludeHit(description, include)
 	if !ok {

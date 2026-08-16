@@ -61,15 +61,15 @@ changes.
 | Param | Default | Notes |
 | --- | --- | --- |
 | `q` | `""` | Description substring; input is debounced 300ms before the URL/query updates |
-| `type` | `all` | `all` \| `DR` \| `CR` |
 | `confidence` | `all` | `all` \| `high` \| `medium` \| `low` |
 | `source` | `all` | `all` \| `keyword` \| `recurrence` \| `both` |
 | `view` | `grouped` | `grouped` \| `transactions` |
 | `page` | `1` | **1-based in the URL** |
 | `pageSize` | `10` | `10` \| `20` \| `25` \| `50` |
 
-Defaults are omitted from the URL. Changing `q`, `type`, `confidence`, or
-`source` resets `page` to 1.
+Defaults are omitted from the URL. Changing `q`, `confidence`, or `source`
+resets `page` to 1. Matched charges are expenses only: the UI always queries
+`type=DR` (credits/refunds are excluded by the analyze pipeline and not shown).
 
 The HTTP API `page` query is **0-based**. Convert in
 `fetchReportTransactions` (`page: search.page - 1`). Do not mix the two.
@@ -84,13 +84,13 @@ Parser/defaults: `web/src/lib/results-search.ts`.
   `rowPaginationFeature`. `getVisibleCells` requires
   `columnVisibilityFeature`; this table uses `row.getAllCells()`.
 - Columns: `web/src/components/matched-transactions/columns.tsx`
-  (`transactionDate`, `description`, `amount`, `confidence`, `type`).
+  (`transactionDate`, `description`, `amount`, `confidence`).
 - Pagination control is the numbered shadcn Pagination (Previous, page links,
   ellipsis, Next) plus a rows-per-page Select — not Previous/Next only.
-- DR/CR is a `ToggleGroup` (All / DR / CR). Confidence is a `ToggleGroup`
-  (All / High / Medium / Low). Source is a `ToggleGroup` (All / Keyword /
-  Pattern / Both). View is a `ToggleGroup` (Grouped / Transactions); default
-  is Grouped with expandable payee rows. Search uses `InputGroup`.
+- Confidence is a `ToggleGroup` (All / High / Medium / Low). Source is a
+  `ToggleGroup` (All / Keyword / Pattern / Both). View is a `ToggleGroup`
+  (Grouped / Transactions); default is Grouped with expandable payee rows.
+  Search uses `InputGroup`. There is no DR/CR filter — expenses only.
 - Empty filtered results use the `Empty` component; load errors use `Alert`.
 
 Add shadcn pieces with `npx shadcn@latest` from `web/`. Do not `--overwrite`
