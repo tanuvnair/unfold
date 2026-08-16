@@ -18,7 +18,7 @@ keywords, and reports the hits as JSON. Use the CLI, HTTP API, or web UI.
 
 ```bash
 make cli
-./unfold configs/banks.json path/to/statement.csv
+./dist/unfold configs/banks.json path/to/statement.csv
 ```
 
 Useful flags: `--bank`, `-v` / `--verbose`, `--diff`, `--dry-run`.

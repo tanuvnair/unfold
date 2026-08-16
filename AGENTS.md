@@ -12,8 +12,8 @@ How to run the repo lives in [`README.md`](README.md).
 - CLI still writes `autopay_report.json` next to the statement. The web UI does
   not persist statements to disk.
 - Default API listen address is loopback. Do not imply hosted/multi-tenant use.
-- Wordmark is lowercase **unfold**. Pine is the only chromatic accent (commit
-  actions). Do not invent testimonials or bank partnerships.
+- Wordmark is lowercase **unfold**. System Blue is the only chromatic accent
+  (commit actions). Do not invent testimonials or bank partnerships.
 
 ## Stack
 
