@@ -5,13 +5,17 @@
       "bank_name": "Kotak Mahindra Bank",
       "skip_rows": 0,
       "description_column": "Description",
+      "amount_column": "Amount",
+      "date_column": "Transaction Date",
+      "date_format": "02-01-2006 15:04:05",
+      "type_column": "Dr / Cr",
       "keywords": [
-        "MANDATE",
-        "AUTOPAY",
-        "NACH",
-        "RECURRING",
-        "STANDING",
-        "MONTHLY INVESTMENT"
+        { "term": "NACH", "tier": "high" },
+        { "term": "MANDATE", "tier": "high" },
+        { "term": "AUTOPAY", "tier": "high" },
+        { "term": "STANDING", "tier": "medium" },
+        { "term": "RECURRING", "tier": "medium" },
+        { "term": "MONTHLY INVESTMENT", "tier": "medium" }
       ],
       "exclude_keywords": []
     }

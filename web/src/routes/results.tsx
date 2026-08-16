@@ -20,6 +20,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import {Separator} from '@/components/ui/separator';
 import {getLatestReport} from '@/lib/report-store';
 import {
   parseResultsSearch,
@@ -69,11 +70,13 @@ function ResultsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Matched transactions</CardTitle>
+          <CardTitle>Matched charges</CardTitle>
           <CardDescription>
-            Rows that matched autopay / mandate keywords in your statement.
+            Expand a payee for the underlying rows, or switch to the flat
+            transaction list.
           </CardDescription>
         </CardHeader>
+        <Separator />
         <CardContent>
           {report.transaction_count === 0 ? (
             <Empty className="border">

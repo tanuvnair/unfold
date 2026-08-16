@@ -12,19 +12,36 @@ import (
 // SupportedVersion is the only config_version this binary accepts.
 const SupportedVersion = 1
 
+// Valid keyword confidence tiers.
+const (
+	TierHigh   = "high"
+	TierMedium = "medium"
+	TierLow    = "low"
+)
+
 // File is the on-disk multi-profile config document.
 type File struct {
 	ConfigVersion int       `json:"config_version"`
 	Profiles      []Profile `json:"profiles"`
 }
 
+// KeywordRule is one include keyword with a confidence tier.
+type KeywordRule struct {
+	Term string `json:"term"`
+	Tier string `json:"tier"`
+}
+
 // Profile is one bank's parsing + matching settings inside a File.
 type Profile struct {
-	BankName          string   `json:"bank_name"`
-	SkipRows          int      `json:"skip_rows"`
-	DescriptionColumn string   `json:"description_column"`
-	Keywords          []string `json:"keywords"`
-	ExcludeKeywords   []string `json:"exclude_keywords"`
+	BankName          string        `json:"bank_name"`
+	SkipRows          int           `json:"skip_rows"`
+	DescriptionColumn string        `json:"description_column"`
+	AmountColumn      string        `json:"amount_column"`
+	DateColumn        string        `json:"date_column"`
+	DateFormat        string        `json:"date_format"`
+	TypeColumn        string        `json:"type_column"`
+	Keywords          []KeywordRule `json:"keywords"`
+	ExcludeKeywords   []string      `json:"exclude_keywords"`
 }
 
 // Config is a selected Profile — what parsers and the matcher consume.
@@ -86,10 +103,39 @@ func (c Config) Validate() error {
 	if strings.TrimSpace(c.DescriptionColumn) == "" {
 		return fmt.Errorf("description_column is required")
 	}
+	if strings.TrimSpace(c.AmountColumn) == "" {
+		return fmt.Errorf("amount_column is required")
+	}
+	if strings.TrimSpace(c.DateColumn) == "" {
+		return fmt.Errorf("date_column is required")
+	}
+	if strings.TrimSpace(c.DateFormat) == "" {
+		return fmt.Errorf("date_format is required")
+	}
+	if strings.TrimSpace(c.TypeColumn) == "" {
+		return fmt.Errorf("type_column is required")
+	}
 	if len(c.Keywords) == 0 {
 		return fmt.Errorf("keywords must not be empty")
 	}
+	for i, kw := range c.Keywords {
+		if strings.TrimSpace(kw.Term) == "" {
+			return fmt.Errorf("keywords[%d]: term must not be empty", i)
+		}
+		if err := validateTier(kw.Tier); err != nil {
+			return fmt.Errorf("keywords[%d]: %w", i, err)
+		}
+	}
 	return nil
+}
+
+func validateTier(tier string) error {
+	switch strings.TrimSpace(tier) {
+	case TierHigh, TierMedium, TierLow:
+		return nil
+	default:
+		return fmt.Errorf("tier must be %q, %q, or %q, got %q", TierHigh, TierMedium, TierLow, tier)
+	}
 }
 
 // Select returns the profile matching bank (BankKey or case-insensitive
@@ -122,10 +168,21 @@ func (f File) knownKeys() []string {
 	return keys
 }
 
-// NormalizedKeywords returns include keywords trimmed, upper-cased, and with
-// blanks removed — ready for substring matching.
-func (c Config) NormalizedKeywords() []string {
-	return normalizeKeywordList(c.Keywords)
+// NormalizedKeywords returns include keyword rules with Term trimmed and
+// upper-cased and blanks removed — ready for substring matching.
+func (c Config) NormalizedKeywords() []KeywordRule {
+	out := make([]KeywordRule, 0, len(c.Keywords))
+	for _, kw := range c.Keywords {
+		term := strings.TrimSpace(kw.Term)
+		if term == "" {
+			continue
+		}
+		out = append(out, KeywordRule{
+			Term: strings.ToUpper(term),
+			Tier: strings.TrimSpace(kw.Tier),
+		})
+	}
+	return out
 }
 
 // NormalizedExcludeKeywords returns exclude keywords ready for matching.

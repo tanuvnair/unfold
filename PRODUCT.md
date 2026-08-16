@@ -20,7 +20,7 @@ Local and private, and India-specific bank-CSV matching: the statement stays on 
 
 ## Operating Context
 
-The job is a short local audit, not an ongoing finance dashboard. Typical flow: export CSV from the bank, choose the matching profile, run unfold (CLI, local API, or web UI), read the matched rows. The CLI writes `autopay_report.json` next to the statement (unless `--dry-run`); `--diff` compares against a previous report. The web UI keeps the latest report in session memory and does not persist statements. CLI, HTTP API, and UI share one parse → keyword-match → report pipeline.
+The job is a short local audit, not an ongoing finance dashboard. Typical flow: export CSV from the bank, choose the matching profile, run unfold (CLI, local API, or web UI), read the matched rows. The CLI writes `autopay_report.json` next to the statement (unless `--dry-run`); `--diff` compares against a previous report. The web UI keeps the latest report in session memory and does not persist statements. CLI, HTTP API, and UI share one parse → keyword-match + recurrence → report pipeline.
 
 ## Capabilities and Constraints
 
@@ -28,7 +28,9 @@ Confirmed:
 
 - Local Go tool with three surfaces: CLI (`unfold-cli`), HTTP API, web UI (Vite + React, embeddable in a single `unfold-api` binary).
 - Input is a bank statement CSV. API rejects non-CSV uploads and caps size at 10 MiB.
-- Matching is include/exclude keywords on the transaction description (config-driven per bank profile).
+- Matching uses confidence-scored include/exclude keywords on the description,
+  plus an independent offline amount+payee recurrence signal (config-driven
+  per bank profile; no merchant database).
 - One implemented parser today: Kotak Mahindra Bank (`kotak-mahindra-bank`). Other banks are not promised.
 - Default listen address is loopback (`127.0.0.1`).
 - Must be secure and not invasive: do not imply accounts, tracking, cloud sync, or sending statements off-device.

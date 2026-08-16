@@ -12,12 +12,18 @@ export type Report = {
 
 export type TransactionTypeFilter = 'all' | 'DR' | 'CR';
 
+export type ConfidenceFilter = 'all' | 'high' | 'medium' | 'low';
+
+export type SourceFilter = 'all' | 'keyword' | 'recurrence' | 'both';
+
 export type MatchedTransaction = {
   id: string;
   transactionDate: string;
   description: string;
   amount: string;
   type: string;
+  confidence: string;
+  source: string;
 };
 
 export type ApiError = {
@@ -31,6 +37,8 @@ type TransactionPageResponse = {
     description: string;
     amount: string;
     type: string;
+    confidence: string;
+    source: string;
   }>;
   row_count: number;
   page: number;
@@ -95,8 +103,11 @@ export async function fetchReportTransactions(
   params: {
     q: string;
     type: TransactionTypeFilter;
+    confidence: ConfidenceFilter;
+    source: SourceFilter;
     page: number;
     pageSize: number;
+    payee?: string;
   },
 ): Promise<{rows: MatchedTransaction[]; rowCount: number}> {
   const search = new URLSearchParams({
@@ -108,6 +119,15 @@ export async function fetchReportTransactions(
   }
   if (params.type !== 'all') {
     search.set('type', params.type);
+  }
+  if (params.confidence !== 'all') {
+    search.set('confidence', params.confidence);
+  }
+  if (params.source !== 'all') {
+    search.set('source', params.source);
+  }
+  if (params.payee?.trim()) {
+    search.set('payee', params.payee.trim());
   }
 
   const res = await fetch(
@@ -124,7 +144,98 @@ export async function fetchReportTransactions(
       description: row.description,
       amount: row.amount,
       type: row.type,
+      confidence: row.confidence,
+      source: row.source,
     })),
     rowCount: data.row_count,
+  };
+}
+
+export type SummaryGroup = {
+  payee: string;
+  occurrenceCount: number;
+  totalAmount: number;
+  avgAmount: number;
+  latestAmount: number;
+  firstSeen: string;
+  lastSeen: string;
+  confidence: string;
+  source: string;
+  monthlyEstimate: number;
+  isMonthlyCadence: boolean;
+};
+
+export type ReportSummary = {
+  groups: SummaryGroup[];
+  estimatedMonthlyTotal: number;
+  groupCount: number;
+};
+
+type SummaryResponse = {
+  groups: Array<{
+    payee: string;
+    occurrence_count: number;
+    total_amount: number;
+    avg_amount: number;
+    latest_amount: number;
+    first_seen: string;
+    last_seen: string;
+    confidence: string;
+    source: string;
+    monthly_estimate: number;
+    is_monthly_cadence: boolean;
+  }>;
+  estimated_monthly_total: number;
+  group_count: number;
+};
+
+export async function fetchReportSummary(
+  id: string,
+  params: {
+    q: string;
+    type: TransactionTypeFilter;
+    confidence: ConfidenceFilter;
+    source: SourceFilter;
+  },
+): Promise<ReportSummary> {
+  const search = new URLSearchParams();
+  if (params.q.trim()) {
+    search.set('q', params.q.trim());
+  }
+  if (params.type !== 'all') {
+    search.set('type', params.type);
+  }
+  if (params.confidence !== 'all') {
+    search.set('confidence', params.confidence);
+  }
+  if (params.source !== 'all') {
+    search.set('source', params.source);
+  }
+  const qs = search.toString();
+  const res = await fetch(
+    apiURL(
+      `/api/reports/${encodeURIComponent(id)}/summary${qs ? `?${qs}` : ''}`,
+    ),
+  );
+  if (!res.ok) {
+    throw new Error(await readError(res));
+  }
+  const data = (await res.json()) as SummaryResponse;
+  return {
+    groups: (data.groups ?? []).map((g) => ({
+      payee: g.payee,
+      occurrenceCount: g.occurrence_count,
+      totalAmount: g.total_amount,
+      avgAmount: g.avg_amount,
+      latestAmount: g.latest_amount,
+      firstSeen: g.first_seen,
+      lastSeen: g.last_seen,
+      confidence: g.confidence,
+      source: g.source,
+      monthlyEstimate: g.monthly_estimate,
+      isMonthlyCadence: g.is_monthly_cadence,
+    })),
+    estimatedMonthlyTotal: data.estimated_monthly_total,
+    groupCount: data.group_count,
   };
 }

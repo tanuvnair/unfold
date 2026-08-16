@@ -44,6 +44,7 @@ func main() {
 	mux.HandleFunc("GET /api/banks", srv.handleBanks)
 	mux.HandleFunc("POST /api/analyze", srv.handleAnalyze)
 	mux.HandleFunc("GET /api/reports/{id}/transactions", srv.handleReportTransactions)
+	mux.HandleFunc("GET /api/reports/{id}/summary", srv.handleReportSummary)
 	if webui.HasUI() {
 		mux.Handle("/", webui.Handler())
 	}

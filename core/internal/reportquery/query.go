@@ -15,10 +15,13 @@ const (
 
 // Query is the server-side search, type filter, and page window.
 type Query struct {
-	Search   string
-	Type     string
-	Page     int
-	PageSize int
+	Search     string
+	Type       string
+	Confidence string
+	Source     string
+	Payee      string // exact PayeeToken match when set
+	Page       int
+	PageSize   int
 }
 
 // Row is one matched transaction in the shape the results table expects.
@@ -28,6 +31,8 @@ type Row struct {
 	Description     string `json:"description"`
 	Amount          string `json:"amount"`
 	Type            string `json:"type"`
+	Confidence      string `json:"confidence"`
+	Source          string `json:"source"`
 }
 
 // Result is one page of filtered transactions plus the filtered total.
@@ -39,23 +44,42 @@ type Result struct {
 }
 
 // Apply filters and paginates transactions for the results table.
-func Apply(rows []txn.Fields, q Query) Result {
+func Apply(rows []report.Entry, q Query) Result {
 	q = q.normalized()
 
 	filtered := make([]indexedRow, 0, len(rows))
 	search := strings.ToLower(strings.TrimSpace(q.Search))
 	typeFilter := strings.ToUpper(strings.TrimSpace(q.Type))
+	confidenceFilter := strings.ToLower(strings.TrimSpace(q.Confidence))
+	sourceFilter := strings.ToLower(strings.TrimSpace(q.Source))
+	payeeFilter := strings.TrimSpace(q.Payee)
 
 	for i, row := range rows {
-		if search != "" && !strings.Contains(strings.ToLower(report.DescriptionOf(row)), search) {
+		if search != "" && !strings.Contains(strings.ToLower(report.DescriptionOf(row.Fields)), search) {
 			continue
 		}
 		if typeFilter != "" {
-			if strings.ToUpper(strings.TrimSpace(lookup(row, "Dr / Cr"))) != typeFilter {
+			if strings.ToUpper(strings.TrimSpace(lookup(row.Fields, "Dr / Cr"))) != typeFilter {
 				continue
 			}
 		}
-		filtered = append(filtered, indexedRow{index: i, fields: row})
+		if confidenceFilter != "" {
+			if strings.ToLower(strings.TrimSpace(row.Confidence)) != confidenceFilter {
+				continue
+			}
+		}
+		if sourceFilter != "" {
+			if strings.ToLower(strings.TrimSpace(row.DetectionSource)) != sourceFilter {
+				continue
+			}
+		}
+		if payeeFilter != "" {
+			token := strings.TrimSpace(row.PayeeToken)
+			if !strings.EqualFold(token, payeeFilter) {
+				continue
+			}
+		}
+		filtered = append(filtered, indexedRow{index: i, entry: row})
 	}
 
 	rowCount := len(filtered)
@@ -72,7 +96,7 @@ func Apply(rows []txn.Fields, q Query) Result {
 
 	out := make([]Row, 0, end-start)
 	for _, ir := range filtered[start:end] {
-		out = append(out, mapRow(ir.index, ir.fields))
+		out = append(out, mapRow(ir.index, ir.entry))
 	}
 	return Result{
 		Rows:     out,
@@ -83,8 +107,8 @@ func Apply(rows []txn.Fields, q Query) Result {
 }
 
 type indexedRow struct {
-	index  int
-	fields txn.Fields
+	index int
+	entry report.Entry
 }
 
 func (q Query) normalized() Query {
@@ -101,16 +125,26 @@ func (q Query) normalized() Query {
 	if q.Type == "ALL" {
 		q.Type = ""
 	}
+	q.Confidence = strings.ToLower(strings.TrimSpace(q.Confidence))
+	if q.Confidence == "all" {
+		q.Confidence = ""
+	}
+	q.Source = strings.ToLower(strings.TrimSpace(q.Source))
+	if q.Source == "all" {
+		q.Source = ""
+	}
 	return q
 }
 
-func mapRow(index int, fields txn.Fields) Row {
+func mapRow(index int, entry report.Entry) Row {
 	return Row{
 		ID:              strconv.Itoa(index),
-		TransactionDate: lookup(fields, "Transaction Date"),
-		Description:     report.DescriptionOf(fields),
-		Amount:          lookup(fields, "Amount"),
-		Type:            lookup(fields, "Dr / Cr"),
+		TransactionDate: lookup(entry.Fields, "Transaction Date"),
+		Description:     report.DescriptionOf(entry.Fields),
+		Amount:          lookup(entry.Fields, "Amount"),
+		Type:            lookup(entry.Fields, "Dr / Cr"),
+		Confidence:      entry.Confidence,
+		Source:          entry.DetectionSource,
 	}
 }
 

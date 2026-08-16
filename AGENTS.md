@@ -45,8 +45,10 @@ changes.
 
 - `POST /api/analyze` stores the full report in RAM and returns
   `{ id, bank_name, transaction_count }` — not the transaction list.
-- `GET /api/reports/{id}/transactions` applies `q`, `type`, `page`, `page_size`
-  and returns one page plus `row_count`.
+- `GET /api/reports/{id}/transactions` applies `q`, `type`, `confidence`,
+  `source`, `payee`, `page`, `page_size` and returns one page plus `row_count`.
+- `GET /api/reports/{id}/summary` returns payee groups plus
+  `estimated_monthly_total` (same filter params except pagination).
 - The web session store (`web/src/lib/report-store.ts`) holds only that
   metadata. The DataTable fetches pages with TanStack Query.
 - CLI output shape is unchanged. Do not put `id` into `autopay_report.json`.
@@ -60,10 +62,14 @@ changes.
 | --- | --- | --- |
 | `q` | `""` | Description substring; input is debounced 300ms before the URL/query updates |
 | `type` | `all` | `all` \| `DR` \| `CR` |
+| `confidence` | `all` | `all` \| `high` \| `medium` \| `low` |
+| `source` | `all` | `all` \| `keyword` \| `recurrence` \| `both` |
+| `view` | `grouped` | `grouped` \| `transactions` |
 | `page` | `1` | **1-based in the URL** |
 | `pageSize` | `10` | `10` \| `20` \| `25` \| `50` |
 
-Defaults are omitted from the URL. Changing `q` or `type` resets `page` to 1.
+Defaults are omitted from the URL. Changing `q`, `type`, `confidence`, or
+`source` resets `page` to 1.
 
 The HTTP API `page` query is **0-based**. Convert in
 `fetchReportTransactions` (`page: search.page - 1`). Do not mix the two.
@@ -78,10 +84,13 @@ Parser/defaults: `web/src/lib/results-search.ts`.
   `rowPaginationFeature`. `getVisibleCells` requires
   `columnVisibilityFeature`; this table uses `row.getAllCells()`.
 - Columns: `web/src/components/matched-transactions/columns.tsx`
-  (`transactionDate`, `description`, `amount`, `type`).
+  (`transactionDate`, `description`, `amount`, `confidence`, `type`).
 - Pagination control is the numbered shadcn Pagination (Previous, page links,
   ellipsis, Next) plus a rows-per-page Select — not Previous/Next only.
-- DR/CR is a `ToggleGroup` (All / DR / CR). Search uses `InputGroup`.
+- DR/CR is a `ToggleGroup` (All / DR / CR). Confidence is a `ToggleGroup`
+  (All / High / Medium / Low). Source is a `ToggleGroup` (All / Keyword /
+  Pattern / Both). View is a `ToggleGroup` (Grouped / Transactions); default
+  is Grouped with expandable payee rows. Search uses `InputGroup`.
 - Empty filtered results use the `Empty` component; load errors use `Alert`.
 
 Add shadcn pieces with `npx shadcn@latest` from `web/`. Do not `--overwrite`

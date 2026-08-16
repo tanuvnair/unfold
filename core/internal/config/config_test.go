@@ -21,8 +21,15 @@ func kotakProfile() config.Profile {
 		BankName:          "Kotak Mahindra Bank",
 		SkipRows:          0,
 		DescriptionColumn: "Description",
-		Keywords:          []string{"NACH", "AUTOPAY"},
-		ExcludeKeywords:   []string{"ONE-OFF"},
+		AmountColumn:      "Amount",
+		DateColumn:        "Transaction Date",
+		DateFormat:        "02-01-2006 15:04:05",
+		TypeColumn:        "Dr / Cr",
+		Keywords: []config.KeywordRule{
+			{Term: "NACH", Tier: "high"},
+			{Term: "AUTOPAY", Tier: "high"},
+		},
+		ExcludeKeywords: []string{"ONE-OFF"},
 	}
 }
 
@@ -54,6 +61,28 @@ func TestFileValidate_RejectsMissingDescriptionColumn(t *testing.T) {
 	f := validFile(p)
 	if err := f.Validate(); err == nil {
 		t.Fatal("expected error for empty description_column")
+	}
+}
+
+func TestFileValidate_RejectsUnknownTier(t *testing.T) {
+	p := kotakProfile()
+	p.Keywords = []config.KeywordRule{{Term: "NACH", Tier: "urgent"}}
+	f := validFile(p)
+	err := f.Validate()
+	if err == nil {
+		t.Fatal("expected error for unknown tier")
+	}
+	if !strings.Contains(err.Error(), "tier") {
+		t.Fatalf("error should mention tier, got: %v", err)
+	}
+}
+
+func TestFileValidate_RejectsEmptyTerm(t *testing.T) {
+	p := kotakProfile()
+	p.Keywords = []config.KeywordRule{{Term: "  ", Tier: "high"}}
+	f := validFile(p)
+	if err := f.Validate(); err == nil {
+		t.Fatal("expected error for empty term")
 	}
 }
 
@@ -99,9 +128,16 @@ func TestSelect_UnknownBank(t *testing.T) {
 
 func TestNormalizedKeywords(t *testing.T) {
 	p := kotakProfile()
-	p.Keywords = []string{"  nach ", "", "AutoPay"}
+	p.Keywords = []config.KeywordRule{
+		{Term: "  nach ", Tier: "high"},
+		{Term: "", Tier: "high"},
+		{Term: "AutoPay", Tier: "medium"},
+	}
 	got := p.NormalizedKeywords()
-	want := []string{"NACH", "AUTOPAY"}
+	want := []config.KeywordRule{
+		{Term: "NACH", Tier: "high"},
+		{Term: "AUTOPAY", Tier: "medium"},
+	}
 	if len(got) != len(want) {
 		t.Fatalf("got %v, want %v", got, want)
 	}
@@ -122,7 +158,11 @@ func TestLoad_RoundTrip(t *testing.T) {
       "bank_name": "Kotak Mahindra Bank",
       "skip_rows": 0,
       "description_column": "Description",
-      "keywords": ["NACH"],
+      "amount_column": "Amount",
+      "date_column": "Transaction Date",
+      "date_format": "02-01-2006 15:04:05",
+      "type_column": "Dr / Cr",
+      "keywords": [{"term": "NACH", "tier": "high"}],
       "exclude_keywords": ["FALSE"]
     }
   ]
@@ -143,6 +183,10 @@ func TestLoad_RoundTrip(t *testing.T) {
 	}
 	if got := cfg.NormalizedExcludeKeywords(); len(got) != 1 || got[0] != "FALSE" {
 		t.Fatalf("NormalizedExcludeKeywords = %v", got)
+	}
+	rules := cfg.NormalizedKeywords()
+	if len(rules) != 1 || rules[0].Term != "NACH" || rules[0].Tier != "high" {
+		t.Fatalf("NormalizedKeywords = %v", rules)
 	}
 }
 
