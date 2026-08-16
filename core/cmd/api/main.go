@@ -23,6 +23,7 @@ const maxUploadBytes = 10 << 20 // 10 MiB
 
 func main() {
 	defaultAddr := listenAddrFromEnv()
+	// Resolved relative to core/ when launched via Makefile (api/serve).
 	defaultConfig := envOr("UNFOLD_API_CONFIG", "configs/banks.json")
 	defaultCORS := envOr("UNFOLD_API_CORS_ORIGIN", "http://localhost:5173")
 

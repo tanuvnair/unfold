@@ -26,7 +26,7 @@ The job is a short local audit, not an ongoing finance dashboard. Typical flow: 
 
 Confirmed:
 
-- Local Go tool with three surfaces: CLI (`unfold`), HTTP API, web UI (Vite + React, embeddable in a single `unfold-api` binary).
+- Local Go tool with three surfaces: CLI (`unfold-cli`), HTTP API, web UI (Vite + React, embeddable in a single `unfold-api` binary).
 - Input is a bank statement CSV. API rejects non-CSV uploads and caps size at 10 MiB.
 - Matching is include/exclude keywords on the transaction description (config-driven per bank profile).
 - One implemented parser today: Kotak Mahindra Bank (`kotak-mahindra-bank`). Other banks are not promised.

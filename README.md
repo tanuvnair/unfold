@@ -8,17 +8,18 @@ keywords, and reports the hits as JSON. Use the CLI, HTTP API, or web UI.
 
 | Path | Role |
 |------|------|
-| `cmd/cli` | CLI (`unfold` binary) |
-| `cmd/api` | Local HTTP API |
-| `internal/` | Shared parse → match → report pipeline |
-| `configs/` | Bank profiles |
+| `core/` | Go module (CLI, API, shared pipeline, bank configs) |
+| `core/cmd/cli` | CLI (`unfold-cli` binary) |
+| `core/cmd/api` | Local HTTP API |
+| `core/internal/` | Shared parse → match → report pipeline |
+| `core/configs/` | Bank profiles |
 | `web/` | Vite + React + TanStack Router + TanStack Table + shadcn UI |
 
 ## CLI
 
 ```bash
-make cli
-./dist/unfold configs/banks.json path/to/statement.csv
+make cli-build
+./dist/unfold-cli core/configs/banks.json path/to/statement.csv
 ```
 
 Useful flags: `--bank`, `-v` / `--verbose`, `--diff`, `--dry-run`.
@@ -27,7 +28,7 @@ Writes `autopay_report.json` next to the statement CSV (unless `--dry-run`).
 
 ## API + UI
 
-**Production / single binary (preferred):** Vite build is copied into `internal/webui/dist` and embedded. One process serves `/` and `/api` on the same origin — leave `UNFOLD_WEB_API_BASE` empty.
+**Production / single binary (preferred):** Vite build is copied into `core/internal/webui/dist` and embedded. One process serves `/` and `/api` on the same origin — leave `UNFOLD_WEB_API_BASE` empty. `make api` / `make serve` run with CWD=`core/` so `UNFOLD_API_CONFIG` defaults to `configs/banks.json` there.
 
 ```bash
 make serve

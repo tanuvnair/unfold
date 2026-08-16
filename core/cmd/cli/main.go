@@ -19,7 +19,7 @@ func main() {
 	diffFlag := flag.Bool("diff", false, "compare against the previous report and print only what changed")
 	dryRunFlag := flag.Bool("dry-run", false, "compute the report without writing autopay_report.json")
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: unfold [flags] <config.json> <statement.csv>\n")
+		fmt.Fprintf(os.Stderr, "Usage: unfold-cli [flags] <config.json> <statement.csv>\n")
 		flag.PrintDefaults()
 	}
 	flag.Parse()

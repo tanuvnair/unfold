@@ -2,12 +2,12 @@ data
 autopay_report.csv
 autopay_report.json
 dist/
-unfold
+unfold-cli
 unfold-api
 web/node_modules
 web/dist
-internal/webui/dist/*
-!internal/webui/dist/.gitkeep
+core/internal/webui/dist/*
+!core/internal/webui/dist/.gitkeep
 .env
 web/.env
 *.exe

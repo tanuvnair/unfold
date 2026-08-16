@@ -17,7 +17,7 @@ How to run the repo lives in [`README.md`](README.md).
 
 ## Stack
 
-- Go API/CLI (`cmd/api`, `cmd/cli`, `internal/`).
+- Go API/CLI (`core/cmd/api`, `core/cmd/cli`, `core/internal/`).
 - Web: Vite + React + TanStack Router + TanStack Query + shadcn/ui
   (style `base-rhea`, Base UI primitives, Hugeicons).
 - Table: TanStack Table v9 (`useTable`, `tableFeatures()`). Do not use the v8
@@ -34,7 +34,7 @@ and rejected: keep the server-side table architecture. Do not silently move
 filtering back to the client.
 
 What this is **not**: a database, a session store on disk, or a multi-user
-backend. Reports live in **one Go process’s RAM** (`internal/reportquery.Store`)
+backend. Reports live in **one Go process’s RAM** (`core/internal/reportquery.Store`)
 keyed by a random id. Restarting the API drops them. Refreshing the tab drops
 the client-side id. The user must analyze again.
 

@@ -1,4 +1,4 @@
-/** Matches the API multipart cap in cmd/api. */
+/** Matches the API multipart cap in core/cmd/api. */
 export const MAX_STATEMENT_BYTES = 10 << 20;
 
 export function validateStatementFile(file: File): string | null {
