@@ -61,7 +61,7 @@ func main() {
 
 	if *verboseFlag {
 		for _, row := range rpt.Transactions {
-			fmt.Println(report.DescriptionOf(row))
+			fmt.Println(report.EntryDescription(row))
 		}
 	}
 
@@ -85,7 +85,7 @@ func printDiff(outputPath string, next report.Report) {
 		if os.IsNotExist(err) {
 			fmt.Printf("Diff: no previous report at %s; treating all %d as new\n", outputPath, next.TransactionCount)
 			for _, row := range next.Transactions {
-				fmt.Printf("+ %s\n", report.DescriptionOf(row))
+				fmt.Printf("+ %s\n", report.EntryDescription(row))
 			}
 			return
 		}
@@ -95,9 +95,9 @@ func printDiff(outputPath string, next report.Report) {
 	d := report.Diff(prev, next)
 	fmt.Printf("Diff: +%d new, -%d removed, =%d unchanged\n", len(d.Added), len(d.Removed), d.Unchanged)
 	for _, row := range d.Added {
-		fmt.Printf("+ %s\n", report.DescriptionOf(row))
+		fmt.Printf("+ %s\n", report.EntryDescription(row))
 	}
 	for _, row := range d.Removed {
-		fmt.Printf("- %s\n", report.DescriptionOf(row))
+		fmt.Printf("- %s\n", report.EntryDescription(row))
 	}
 }

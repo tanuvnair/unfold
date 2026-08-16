@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 // Field is one statement column name/value pair.
@@ -23,11 +24,15 @@ type Fields []Field
 // Transaction is one parsed row from a bank statement.
 //
 // Description is pulled out explicitly because it's the one field every
-// matcher needs to inspect, regardless of which bank produced it. Fields
-// holds every column (including Description) in header order so the report
-// can show the full row.
+// matcher needs to inspect, regardless of which bank produced it. Amount,
+// Date, and Type are derived at parse time for recurrence detection.
+// Fields holds every column (including Description) in header order so the
+// report can show the full row.
 type Transaction struct {
 	Description string
+	Amount      float64
+	Date        time.Time
+	Type        string // "DR" or "CR"
 	Fields      Fields
 }
 

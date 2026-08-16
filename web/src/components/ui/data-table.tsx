@@ -84,6 +84,10 @@ export type DataTableProps<TData extends RowData> = {
   isFetching?: boolean;
   toolbar?: ReactNode;
   empty?: ReactNode;
+  /** Hide rows-per-page and page links (nested / complete pages). */
+  showPagination?: boolean;
+  /** Flush table without the sealed border shell — for accordion details. */
+  variant?: 'default' | 'embedded';
 };
 
 export function DataTable<TData extends RowData>({
@@ -97,6 +101,8 @@ export function DataTable<TData extends RowData>({
   isFetching = false,
   toolbar,
   empty,
+  showPagination = true,
+  variant = 'default',
 }: DataTableProps<TData>) {
   const table = useTable(
     {
@@ -116,14 +122,21 @@ export function DataTable<TData extends RowData>({
   const colSpan = columns.length;
   const canPrevious = table.getCanPreviousPage();
   const canNext = table.getCanNextPage();
-  const showPagination = !isLoading && rowCount > 0;
+  const paginationVisible =
+    showPagination && !isLoading && rowCount > 0;
+  const skeletonRows =
+    variant === 'embedded'
+      ? Math.min(pagination.pageSize, 4)
+      : pagination.pageSize;
+  const embedded = variant === 'embedded';
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className={cn('flex flex-col', embedded ? 'gap-0' : 'gap-4')}>
       {toolbar}
       <div
         className={cn(
-          'overflow-hidden rounded-2xl border',
+          'overflow-hidden',
+          !embedded && 'rounded-2xl border',
           isFetching && !isLoading && 'opacity-70',
         )}
       >
@@ -146,7 +159,7 @@ export function DataTable<TData extends RowData>({
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              Array.from({length: pagination.pageSize}, (_, rowIndex) => (
+              Array.from({length: skeletonRows}, (_, rowIndex) => (
                 <TableRow key={`skeleton-${rowIndex}`}>
                   {columns.map((_, cellIndex) => (
                     <TableCell key={`skeleton-${rowIndex}-${cellIndex}`}>
@@ -184,7 +197,7 @@ export function DataTable<TData extends RowData>({
           </TableBody>
         </Table>
       </div>
-      {showPagination ? (
+      {paginationVisible ? (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Field orientation="horizontal" className="w-fit">
             <FieldLabel htmlFor="rows-per-page">Rows per page</FieldLabel>

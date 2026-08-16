@@ -16,18 +16,24 @@ func TestHandleReportTransactions(t *testing.T) {
 	id, err := store.Put(report.Report{
 		BankName:         "Kotak Mahindra Bank",
 		TransactionCount: 2,
-		Transactions: []txn.Fields{
+		Transactions: []report.Entry{
 			{
-				{Name: "Transaction Date", Value: "03-01-2026 08:16:49"},
-				{Name: "Description", Value: "UPI/Netflix/MandateExecute"},
-				{Name: "Amount", Value: "199.00"},
-				{Name: "Dr / Cr", Value: "DR"},
+				Confidence: "high",
+				Fields: txn.Fields{
+					{Name: "Transaction Date", Value: "03-01-2026 08:16:49"},
+					{Name: "Description", Value: "UPI/Netflix/MandateExecute"},
+					{Name: "Amount", Value: "199.00"},
+					{Name: "Dr / Cr", Value: "DR"},
+				},
 			},
 			{
-				{Name: "Transaction Date", Value: "05-01-2026 05:24:48"},
-				{Name: "Description", Value: "IB:MONTHLY INVESTMENT"},
-				{Name: "Amount", Value: "5,000.00"},
-				{Name: "Dr / Cr", Value: "DR"},
+				Confidence: "medium",
+				Fields: txn.Fields{
+					{Name: "Transaction Date", Value: "05-01-2026 05:24:48"},
+					{Name: "Description", Value: "IB:MONTHLY INVESTMENT"},
+					{Name: "Amount", Value: "5,000.00"},
+					{Name: "Dr / Cr", Value: "DR"},
+				},
 			},
 		},
 	})
@@ -56,6 +62,9 @@ func TestHandleReportTransactions(t *testing.T) {
 	if got.Rows[0].Description != "UPI/Netflix/MandateExecute" {
 		t.Fatalf("row=%+v", got.Rows[0])
 	}
+	if got.Rows[0].Confidence != "high" {
+		t.Fatalf("confidence=%q", got.Rows[0].Confidence)
+	}
 }
 
 func TestHandleReportTransactions_NotFound(t *testing.T) {
@@ -68,5 +77,63 @@ func TestHandleReportTransactions_NotFound(t *testing.T) {
 	mux.ServeHTTP(rr, req)
 	if rr.Code != http.StatusNotFound {
 		t.Fatalf("status=%d", rr.Code)
+	}
+}
+
+func TestHandleReportSummary(t *testing.T) {
+	store := reportquery.NewStore()
+	id, err := store.Put(report.Report{
+		BankName:         "Kotak Mahindra Bank",
+		TransactionCount: 2,
+		Transactions: []report.Entry{
+			{
+				Confidence:           "high",
+				DetectionSource:      report.SourceRecurrence,
+				PayeeToken:           "NETFLIX",
+				HasRecurrenceMetrics: true,
+				AvgIntervalDays:      30,
+				Fields: txn.Fields{
+					{Name: "Transaction Date", Value: "05-01-2025 10:00:00"},
+					{Name: "Description", Value: "UPI/Netflix/1"},
+					{Name: "Amount", Value: "199.00"},
+					{Name: "Dr / Cr", Value: "DR"},
+				},
+			},
+			{
+				Confidence:           "high",
+				DetectionSource:      report.SourceRecurrence,
+				PayeeToken:           "NETFLIX",
+				HasRecurrenceMetrics: true,
+				AvgIntervalDays:      30,
+				Fields: txn.Fields{
+					{Name: "Transaction Date", Value: "05-02-2025 10:00:00"},
+					{Name: "Description", Value: "UPI/Netflix/2"},
+					{Name: "Amount", Value: "199.00"},
+					{Name: "Dr / Cr", Value: "DR"},
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	srv := &server{reports: store}
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /api/reports/{id}/summary", srv.handleReportSummary)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/reports/"+id+"/summary", nil)
+	rr := httptest.NewRecorder()
+	mux.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status=%d body=%s", rr.Code, rr.Body.String())
+	}
+
+	var got reportquery.SummaryResult
+	if err := json.NewDecoder(rr.Body).Decode(&got); err != nil {
+		t.Fatal(err)
+	}
+	if got.GroupCount != 1 || got.EstimatedMonthlyTotal != 199 {
+		t.Fatalf("got=%+v", got)
 	}
 }

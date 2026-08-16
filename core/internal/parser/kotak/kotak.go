@@ -8,7 +8,10 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
+	"time"
+	"unicode"
 
 	"github.com/tanuvnair/unfold/internal/config"
 	"github.com/tanuvnair/unfold/internal/parser"
@@ -43,6 +46,18 @@ func (p *Parser) Parse(r io.Reader, cfg config.Config) ([]txn.Transaction, error
 	if err != nil {
 		return nil, fmt.Errorf("resolve description column: %w", err)
 	}
+	amountIdx, err := parser.ResolveColumnIndex(header, cfg.AmountColumn)
+	if err != nil {
+		return nil, fmt.Errorf("resolve amount column: %w", err)
+	}
+	dateIdx, err := parser.ResolveColumnIndex(header, cfg.DateColumn)
+	if err != nil {
+		return nil, fmt.Errorf("resolve date column: %w", err)
+	}
+	typeIdx, err := parser.ResolveColumnIndex(header, cfg.TypeColumn)
+	if err != nil {
+		return nil, fmt.Errorf("resolve type column: %w", err)
+	}
 
 	var transactions []txn.Transaction
 	for {
@@ -56,7 +71,11 @@ func (p *Parser) Parse(r io.Reader, cfg config.Config) ([]txn.Transaction, error
 		if !isTransactionRow(record, len(header)) {
 			continue
 		}
-		transactions = append(transactions, toTransaction(header, record, descIdx))
+		t, err := toTransaction(header, record, descIdx, amountIdx, dateIdx, typeIdx, cfg.DateFormat)
+		if err != nil {
+			return nil, err
+		}
+		transactions = append(transactions, t)
 	}
 
 	return transactions, nil
@@ -111,7 +130,7 @@ func isTransactionRow(record []string, expectedCols int) bool {
 	return true
 }
 
-func toTransaction(header, record []string, descIdx int) txn.Transaction {
+func toTransaction(header, record []string, descIdx, amountIdx, dateIdx, typeIdx int, dateFormat string) (txn.Transaction, error) {
 	fields := make(txn.Fields, 0, len(header))
 	seen := make(map[string]struct{}, len(header))
 	for i := range header {
@@ -124,15 +143,56 @@ func toTransaction(header, record []string, descIdx int) txn.Transaction {
 		fields = append(fields, txn.Field{Name: name, Value: value})
 	}
 
-	description := ""
-	if descIdx >= 0 && descIdx < len(record) {
-		description = strings.TrimSpace(record[descIdx])
+	description := cell(record, descIdx)
+	amountRaw := cell(record, amountIdx)
+	amount, err := parseAmount(amountRaw)
+	if err != nil {
+		return txn.Transaction{}, fmt.Errorf("parse amount %q: %w", amountRaw, err)
 	}
+	dateRaw := cell(record, dateIdx)
+	date, err := time.Parse(dateFormat, dateRaw)
+	if err != nil {
+		return txn.Transaction{}, fmt.Errorf("parse date %q with layout %q: %w", dateRaw, dateFormat, err)
+	}
+	txnType := strings.ToUpper(strings.TrimSpace(cell(record, typeIdx)))
 
 	return txn.Transaction{
 		Description: description,
+		Amount:      amount,
+		Date:        date,
+		Type:        txnType,
 		Fields:      fields,
+	}, nil
+}
+
+func cell(record []string, idx int) string {
+	if idx < 0 || idx >= len(record) {
+		return ""
 	}
+	return strings.TrimSpace(record[idx])
+}
+
+// parseAmount converts Indian bank amount strings (commas, optional currency
+// symbols) into float64. Empty or non-numeric values are errors.
+func parseAmount(raw string) (float64, error) {
+	cleaned := strings.TrimSpace(raw)
+	cleaned = strings.ReplaceAll(cleaned, ",", "")
+	cleaned = strings.ReplaceAll(cleaned, "₹", "")
+	cleaned = strings.TrimSpace(cleaned)
+	if strings.HasPrefix(strings.ToUpper(cleaned), "RS") {
+		cleaned = strings.TrimSpace(cleaned[2:])
+		cleaned = strings.TrimLeft(cleaned, ". ")
+	}
+	cleaned = strings.Map(func(r rune) rune {
+		if unicode.IsSpace(r) {
+			return -1
+		}
+		return r
+	}, cleaned)
+	if cleaned == "" {
+		return 0, fmt.Errorf("empty amount")
+	}
+	return strconv.ParseFloat(cleaned, 64)
 }
 
 // uniqueColumnName keeps the first occurrence of a header as-is. Duplicates
