@@ -137,6 +137,7 @@ export function DataTable<TData extends RowData>({
         className={cn(
           'overflow-hidden',
           !embedded && 'rounded-2xl border',
+          embedded && '[&_tbody_tr:last-child]:border-b-0',
           isFetching && !isLoading && 'opacity-70',
         )}
       >

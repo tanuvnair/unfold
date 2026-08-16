@@ -1,4 +1,4 @@
-import {Fragment, useEffect, useState} from 'react';
+import {useEffect, useState} from 'react';
 import {keepPreviousData, useQuery} from '@tanstack/react-query';
 import {useNavigate, useSearch} from '@tanstack/react-router';
 import {format, parse} from 'date-fns';
@@ -53,7 +53,6 @@ import {
   ItemDescription,
   ItemGroup,
   ItemMedia,
-  ItemSeparator,
   ItemTitle,
 } from '@/components/ui/item';
 import {
@@ -399,7 +398,7 @@ function PayeeGroupRow({report, group}: {report: Report; group: SummaryGroup}) {
     >
       <Item
         size="sm"
-        className="w-full min-w-0"
+        className="w-full min-w-0 rounded-none border-0"
         render={<CollapsibleTrigger />}
       >
         <ItemMedia variant="icon">
@@ -472,12 +471,10 @@ function GroupsLoading() {
   return (
     <div className="flex flex-col gap-3">
       <Skeleton className="h-4 w-48" />
-      <ItemGroup className="gap-0">
-        <Skeleton className="h-14 w-full" />
-        <ItemSeparator className="my-0" />
-        <Skeleton className="h-14 w-full" />
-        <ItemSeparator className="my-0" />
-        <Skeleton className="h-14 w-full" />
+      <ItemGroup className="min-w-0 gap-0 divide-y divide-border">
+        <Skeleton className="h-14 w-full rounded-none" />
+        <Skeleton className="h-14 w-full rounded-none" />
+        <Skeleton className="h-14 w-full rounded-none" />
       </ItemGroup>
     </div>
   );
@@ -618,12 +615,13 @@ export function MatchedTransactionsTable({report}: {report: Report}) {
               </EmptyHeader>
             </Empty>
           ) : (
-            <ItemGroup className="min-w-0 gap-0">
-              {groups.map((group, index) => (
-                <Fragment key={group.payee}>
-                  {index > 0 ? <ItemSeparator className="my-0" /> : null}
-                  <PayeeGroupRow report={report} group={group} />
-                </Fragment>
+            <ItemGroup className="min-w-0 gap-0 divide-y divide-border">
+              {groups.map((group) => (
+                <PayeeGroupRow
+                  key={group.payee}
+                  report={report}
+                  group={group}
+                />
               ))}
             </ItemGroup>
           )}
