@@ -113,23 +113,15 @@ func isTransactionRow(record []string, expectedCols int) bool {
 
 func toTransaction(header, record []string, descIdx int) txn.Transaction {
 	fields := make(txn.Fields, 0, len(header))
-	indexByName := make(map[string]int, len(header))
-	for i, col := range header {
-		col = strings.TrimSpace(col)
-		if col == "" {
-			col = fmt.Sprintf("column_%d", i+1)
-		}
+	seen := make(map[string]struct{}, len(header))
+	for i := range header {
+		name := uniqueColumnName(header, i, seen)
+		seen[name] = struct{}{}
 		value := ""
 		if i < len(record) {
 			value = strings.TrimSpace(record[i])
 		}
-		// Duplicate headers: last wins (mirrors the old map behavior).
-		if idx, ok := indexByName[col]; ok {
-			fields[idx].Value = value
-			continue
-		}
-		indexByName[col] = len(fields)
-		fields = append(fields, txn.Field{Name: col, Value: value})
+		fields = append(fields, txn.Field{Name: name, Value: value})
 	}
 
 	description := ""
@@ -140,5 +132,34 @@ func toTransaction(header, record []string, descIdx int) txn.Transaction {
 	return txn.Transaction{
 		Description: description,
 		Fields:      fields,
+	}
+}
+
+// uniqueColumnName keeps the first occurrence of a header as-is. Duplicates
+// are renamed using the previous column (e.g. second "Dr / Cr" after
+// "Balance" becomes "Balance Dr / Cr") so amount and balance sides are both
+// preserved.
+func uniqueColumnName(header []string, i int, seen map[string]struct{}) string {
+	col := strings.TrimSpace(header[i])
+	if col == "" {
+		return fmt.Sprintf("column_%d", i+1)
+	}
+	if _, exists := seen[col]; !exists {
+		return col
+	}
+	if i > 0 {
+		prev := strings.TrimSpace(header[i-1])
+		if prev != "" {
+			candidate := prev + " " + col
+			if _, exists := seen[candidate]; !exists {
+				return candidate
+			}
+		}
+	}
+	for n := 2; ; n++ {
+		candidate := fmt.Sprintf("%s (%d)", col, n)
+		if _, exists := seen[candidate]; !exists {
+			return candidate
+		}
 	}
 }

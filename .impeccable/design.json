@@ -1,0 +1,389 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-16T04:20:00+05:30",
+  "title": "Design System: unfold",
+  "extensions": {
+    "colorMeta": {
+      "pine": {
+        "role": "primary",
+        "displayName": "Pine",
+        "canonical": "oklch(0.508 0.118 165.612)",
+        "tonalRamp": [
+          "oklch(0.18 0.08 165.612)",
+          "oklch(0.30 0.10 165.612)",
+          "oklch(0.432 0.095 166.913)",
+          "oklch(0.508 0.118 165.612)",
+          "oklch(0.596 0.145 163.225)",
+          "oklch(0.696 0.17 162.48)",
+          "oklch(0.845 0.143 164.978)",
+          "oklch(0.95 0.04 165.612)"
+        ]
+      },
+      "pine-foreground": {
+        "role": "primary",
+        "displayName": "Pine Ink",
+        "canonical": "oklch(0.979 0.021 166.113)",
+        "tonalRamp": [
+          "oklch(0.18 0.02 166)",
+          "oklch(0.32 0.02 166)",
+          "oklch(0.46 0.02 166)",
+          "oklch(0.60 0.02 166)",
+          "oklch(0.74 0.02 166)",
+          "oklch(0.86 0.02 166)",
+          "oklch(0.979 0.021 166.113)",
+          "oklch(0.99 0.01 166)"
+        ]
+      },
+      "pine-deep": {
+        "role": "primary",
+        "displayName": "Pine Deep",
+        "canonical": "oklch(0.432 0.095 166.913)",
+        "tonalRamp": [
+          "oklch(0.18 0.08 166.913)",
+          "oklch(0.30 0.09 166.913)",
+          "oklch(0.432 0.095 166.913)",
+          "oklch(0.52 0.11 166.913)",
+          "oklch(0.62 0.11 166.913)",
+          "oklch(0.74 0.09 166.913)",
+          "oklch(0.86 0.06 166.913)",
+          "oklch(0.95 0.03 166.913)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "oklch(1 0 0)",
+        "tonalRamp": [
+          "oklch(0.145 0 0)",
+          "oklch(0.27 0 0)",
+          "oklch(0.40 0 0)",
+          "oklch(0.556 0 0)",
+          "oklch(0.70 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.922 0 0)",
+          "oklch(1 0 0)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(0.145 0 0)",
+        "tonalRamp": [
+          "oklch(0.145 0 0)",
+          "oklch(0.27 0 0)",
+          "oklch(0.40 0 0)",
+          "oklch(0.556 0 0)",
+          "oklch(0.70 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.922 0 0)",
+          "oklch(1 0 0)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "canonical": "oklch(0.97 0 0)",
+        "tonalRamp": [
+          "oklch(0.145 0 0)",
+          "oklch(0.27 0 0)",
+          "oklch(0.40 0 0)",
+          "oklch(0.556 0 0)",
+          "oklch(0.70 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.97 0 0)",
+          "oklch(1 0 0)"
+        ]
+      },
+      "muted-ink": {
+        "role": "neutral",
+        "displayName": "Muted Ink",
+        "canonical": "oklch(0.556 0 0)",
+        "tonalRamp": [
+          "oklch(0.145 0 0)",
+          "oklch(0.27 0 0)",
+          "oklch(0.40 0 0)",
+          "oklch(0.556 0 0)",
+          "oklch(0.70 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.922 0 0)",
+          "oklch(1 0 0)"
+        ]
+      },
+      "cool-wash": {
+        "role": "secondary",
+        "displayName": "Cool Wash",
+        "canonical": "oklch(0.967 0.001 286.375)",
+        "tonalRamp": [
+          "oklch(0.21 0.006 285.885)",
+          "oklch(0.32 0.006 286)",
+          "oklch(0.45 0.005 286)",
+          "oklch(0.58 0.004 286)",
+          "oklch(0.72 0.003 286)",
+          "oklch(0.85 0.002 286)",
+          "oklch(0.967 0.001 286.375)",
+          "oklch(0.99 0.001 286)"
+        ]
+      },
+      "cool-wash-ink": {
+        "role": "secondary",
+        "displayName": "Cool Wash Ink",
+        "canonical": "oklch(0.21 0.006 285.885)",
+        "tonalRamp": [
+          "oklch(0.21 0.006 285.885)",
+          "oklch(0.32 0.006 286)",
+          "oklch(0.45 0.005 286)",
+          "oklch(0.58 0.004 286)",
+          "oklch(0.72 0.003 286)",
+          "oklch(0.85 0.002 286)",
+          "oklch(0.967 0.001 286.375)",
+          "oklch(0.99 0.001 286)"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "canonical": "oklch(0.922 0 0)",
+        "tonalRamp": [
+          "oklch(0.145 0 0)",
+          "oklch(0.27 0 0)",
+          "oklch(0.40 0 0)",
+          "oklch(0.556 0 0)",
+          "oklch(0.70 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.922 0 0)",
+          "oklch(1 0 0)"
+        ]
+      },
+      "field": {
+        "role": "neutral",
+        "displayName": "Field",
+        "canonical": "oklch(0.922 0 0)",
+        "tonalRamp": [
+          "oklch(0.145 0 0)",
+          "oklch(0.27 0 0)",
+          "oklch(0.40 0 0)",
+          "oklch(0.556 0 0)",
+          "oklch(0.70 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.922 0 0)",
+          "oklch(1 0 0)"
+        ]
+      },
+      "ring": {
+        "role": "neutral",
+        "displayName": "Ring",
+        "canonical": "oklch(0.708 0 0)",
+        "tonalRamp": [
+          "oklch(0.145 0 0)",
+          "oklch(0.27 0 0)",
+          "oklch(0.40 0 0)",
+          "oklch(0.556 0 0)",
+          "oklch(0.708 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.922 0 0)",
+          "oklch(1 0 0)"
+        ]
+      },
+      "destructive": {
+        "role": "primary",
+        "displayName": "Signal Red",
+        "canonical": "oklch(0.577 0.245 27.325)",
+        "tonalRamp": [
+          "oklch(0.22 0.12 27.325)",
+          "oklch(0.34 0.16 27.325)",
+          "oklch(0.46 0.20 27.325)",
+          "oklch(0.577 0.245 27.325)",
+          "oklch(0.68 0.20 27.325)",
+          "oklch(0.78 0.14 27.325)",
+          "oklch(0.88 0.08 27.325)",
+          "oklch(0.96 0.03 27.325)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page titles only. Largest type in the product; no poster display size."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Empty-state titles. Card titles step down to 1rem medium."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Descriptions, table cells, supporting copy."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Field labels, buttons, and badge type. Sentence case."
+      }
+    },
+    "shadows": [
+      {
+        "name": "hairline-seat",
+        "value": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+        "purpose": "Faint card rest shadow; always paired with ring-1 ring-foreground/5."
+      },
+      {
+        "name": "popover-lift",
+        "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+        "purpose": "Select and overlay popovers only; the one structural lift off the page plane."
+      }
+    ],
+    "motion": [
+      {
+        "name": "page-enter",
+        "value": "300ms fade-in + 8px slide-from-bottom",
+        "purpose": "Page shell entrance."
+      },
+      {
+        "name": "control",
+        "value": "200ms color, box-shadow",
+        "purpose": "Input, select trigger, and input-group focus."
+      },
+      {
+        "name": "popover",
+        "value": "100ms fade + zoom-in-95",
+        "purpose": "Select popup open/close."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "md",
+        "value": "768px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one firm Pine tap that commits the statement.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Analyze statement</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; height: 2.25rem; padding: 0 1rem; border: 1px solid transparent; border-radius: var(--radius-2xl, 1.125rem); background: var(--primary); color: var(--primary-foreground); font-family: var(--font-sans, 'Inter Variable', sans-serif); font-size: 0.875rem; font-weight: 500; white-space: nowrap; cursor: pointer; transition: background-color 150ms, border-color 150ms, box-shadow 150ms, transform 150ms; } .ds-btn-primary:hover { background: color-mix(in oklch, var(--primary) 80%, transparent); } .ds-btn-primary:focus-visible { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 30%, transparent); } .ds-btn-primary:active { transform: translateY(1px); }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary paper action, used to start another audit.",
+      "html": "<button class=\"ds-btn-outline\" type=\"button\">Analyze another</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; height: 2rem; padding: 0 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-2xl, 1.125rem); background: var(--background); color: var(--foreground); font-family: var(--font-sans, 'Inter Variable', sans-serif); font-size: 0.875rem; font-weight: 500; white-space: nowrap; cursor: pointer; transition: background-color 150ms, border-color 150ms, box-shadow 150ms; } .ds-btn-outline:hover { background: var(--muted); } .ds-btn-outline:focus-visible { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 30%, transparent); }"
+    },
+    {
+      "name": "Wordmark Nav",
+      "kind": "nav",
+      "refersTo": "nav-wordmark",
+      "description": "56px paper bar with lowercase unfold; home link only.",
+      "html": "<header class=\"ds-nav\"><a class=\"ds-nav-wordmark\" href=\"/\">unfold</a></header>",
+      "css": ".ds-nav { display: flex; align-items: center; height: 3.5rem; padding: 0 1.5rem; background: var(--background); border-bottom: 1px solid var(--border); } .ds-nav-wordmark { font-family: var(--font-sans, 'Inter Variable', sans-serif); font-size: 1.125rem; font-weight: 600; letter-spacing: -0.025em; color: var(--foreground); text-decoration: none; } .ds-nav-wordmark:hover { color: var(--foreground); } .ds-nav-wordmark:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 30%, transparent); border-radius: 0.25rem; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Sealed 24px unit of work: one card per job.",
+      "html": "<article class=\"ds-card\"><header class=\"ds-card-header\"><h2 class=\"ds-card-title\">Analyze statement</h2><p class=\"ds-card-desc\">Choose a bank profile, then upload the statement export.</p></header><div class=\"ds-card-body\">Statement CSV</div></article>",
+      "css": ".ds-card { display: flex; flex-direction: column; gap: 1.25rem; overflow: hidden; padding: 1.25rem 0; background: var(--card); color: var(--card-foreground); border-radius: 24px; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05), 0 0 0 1px color-mix(in oklch, var(--foreground) 5%, transparent); font-family: var(--font-sans, 'Inter Variable', sans-serif); font-size: 0.875rem; } .ds-card-header, .ds-card-body { padding: 0 1.25rem; } .ds-card-title { margin: 0; font-size: 1rem; font-weight: 500; } .ds-card-desc { margin: 0.375rem 0 0; color: var(--muted-foreground); }"
+    },
+    {
+      "name": "Wash Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "18px washed field; transparent border at rest, Ring halo on focus.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Bank</span><input class=\"ds-input\" type=\"text\" placeholder=\"Select a bank\" /></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 0.375rem; font-family: var(--font-sans, 'Inter Variable', sans-serif); } .ds-field-label { font-size: 0.875rem; font-weight: 500; color: var(--foreground); } .ds-input { height: 2rem; width: 100%; padding: 0.25rem 0.625rem; border: 1px solid transparent; border-radius: var(--radius-2xl, 1.125rem); background: color-mix(in oklch, var(--input) 50%, transparent); color: var(--foreground); font-size: 0.875rem; transition: color 200ms, box-shadow 200ms, border-color 200ms; } .ds-input::placeholder { color: var(--muted-foreground); } .ds-input:hover { } .ds-input:focus-visible { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 30%, transparent); }"
+    },
+    {
+      "name": "File Input Group",
+      "kind": "input",
+      "refersTo": "select-trigger",
+      "description": "Washed group with muted icon addon; focus ring sits on the group.",
+      "html": "<div class=\"ds-input-group\"><span class=\"ds-input-addon\" aria-hidden=\"true\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M12 16V4\" /><path d=\"M8 8l4-4 4 4\" /><path d=\"M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2\" /></svg></span><input class=\"ds-input-group-control\" type=\"text\" placeholder=\"Supported bank statement exports (.csv).\" /></div>",
+      "css": ".ds-input-group { display: flex; align-items: center; height: 2rem; width: 100%; border: 1px solid transparent; border-radius: var(--radius-2xl, 1.125rem); background: color-mix(in oklch, var(--input) 50%, transparent); transition: color 200ms, box-shadow 200ms, border-color 200ms; font-family: var(--font-sans, 'Inter Variable', sans-serif); } .ds-input-addon { display: flex; align-items: center; padding-left: 0.5rem; color: var(--muted-foreground); } .ds-input-group-control { flex: 1; height: 100%; border: 0; background: transparent; padding: 0 0.625rem; font-size: 0.875rem; color: var(--foreground); } .ds-input-group-control::placeholder { color: var(--muted-foreground); } .ds-input-group-control:focus { outline: none; } .ds-input-group:focus-within { border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 30%, transparent); }"
+    },
+    {
+      "name": "Count Badge",
+      "kind": "chip",
+      "refersTo": "badge-secondary",
+      "description": "Cool Wash count chip beside a results title.",
+      "html": "<span class=\"ds-badge\">12</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; justify-content: center; height: 1.25rem; padding: 0.125rem 0.5rem; border-radius: var(--radius-2xl, 1.125rem); background: var(--secondary); color: var(--secondary-foreground); font-family: var(--font-sans, 'Inter Variable', sans-serif); font-size: 0.75rem; font-weight: 500; }"
+    },
+    {
+      "name": "Destructive Alert",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Paper-ground error; Signal Red type, not a flooded card.",
+      "html": "<div class=\"ds-alert\" role=\"alert\"><strong class=\"ds-alert-title\">Analyze failed</strong><p class=\"ds-alert-desc\">Choose a bank statement CSV first.</p></div>",
+      "css": ".ds-alert { display: grid; gap: 0.125rem; width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-2xl, 1.125rem); background: var(--card); color: var(--destructive); font-family: var(--font-sans, 'Inter Variable', sans-serif); font-size: 0.875rem; text-align: left; } .ds-alert-title { font-weight: 500; } .ds-alert-desc { margin: 0; color: color-mix(in oklch, var(--destructive) 90%, transparent); } .ds-alert:hover { }"
+    },
+    {
+      "name": "Empty State",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Dashed 22px seal when a statement has no autopay matches.",
+      "html": "<div class=\"ds-empty\"><div class=\"ds-empty-icon\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"11\" cy=\"11\" r=\"7\" /><path d=\"m20 20-3-3\" /><path d=\"M8 11h6\" /></svg></div><h2 class=\"ds-empty-title\">No autopay matches</h2><p class=\"ds-empty-desc\">No autopay matches found for this statement.</p></div>",
+      "css": ".ds-empty { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 3rem; text-align: center; border: 1px dashed var(--border); border-radius: var(--radius-3xl, 1.375rem); font-family: var(--font-sans, 'Inter Variable', sans-serif); } .ds-empty-icon { display: flex; align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; margin-bottom: 0.5rem; border-radius: 0.75rem; background: var(--muted); color: var(--foreground); } .ds-empty-title { margin: 0; font-size: 1.125rem; font-weight: 500; letter-spacing: -0.025em; } .ds-empty-desc { margin: 0; max-width: 24rem; font-size: 0.875rem; line-height: 1.625; color: var(--muted-foreground); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Sealed Ledger",
+    "overview": "unfold's interface treats privacy as a material, not a slogan. The screen is a sealed paper field: white, hairline-edged, and chromatically silent until the user must act. Then Pine fires once, on the control that commits the statement. That tap is tactile and confident; everything around it stays quiet.\n\nThe system is Inter Variable at every rank, shadcn base-rhea geometry with pill-rounded controls and larger sealed cards, and depth that is tonal rather than theatrical. Cards sit on the page through a 1px ink-whisper ring and a faint shadow. Nothing floats. Nothing ornaments. The job is a short local audit, so the layout stays a single centered column, not a dashboard.",
+    "keyCharacteristics": [
+      "Inter Variable for heading and body; no second family",
+      "Pine as the sole chromatic accent, used on committing actions",
+      "Soft-seal radii: 18px controls, 24px cards",
+      "Hairline ring plus faint shadow; no floating chrome",
+      "Light paper default; dark tokens exist as a theme, not the primary chrome",
+      "Lowercase wordmark \"unfold\""
+    ],
+    "rules": [
+      {
+        "name": "The Pine Tap Rule",
+        "body": "Pine appears on the action that commits, and almost nowhere else. Filling a header, a page wash, or decorative shapes with Pine breaks the seal.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Accent Rule",
+        "body": "Primary and accent are the same Pine token. Do not introduce a second brand hue.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Voice Rule",
+        "body": "Heading and body share Inter Variable. --font-heading is an alias of --font-sans, not a second face.",
+        "section": "typography"
+      },
+      {
+        "name": "The Short Audit Rule",
+        "body": "If a screen needs a second column to feel complete, the layout has drifted.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Hairline Seat Rule",
+        "body": "Resting surfaces sit on Paper via a 1px ink-whisper ring and a faint shadow. Do not add large drop shadows, glass, or gradient scrims.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Soft Seal Rule",
+        "body": "Interactive chrome is 18px. Cards are 24px. Do not mix sharp 4px rectangles into this vocabulary, and do not fully pill large surfaces.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep the wordmark lowercase \"unfold\" in Inter semibold.",
+      "Do spend Pine on the committing control; let Paper and Ink do the rest.",
+      "Do seat cards with a hairline ring and a faint shadow.",
+      "Do use 18px seals on controls and 24px on cards.",
+      "Do keep new screens in the centered 3xl/5xl column."
+    ],
+    "donts": [
+      "Don't introduce a second typeface or a display/serif pairing.",
+      "Don't paint headers, page backgrounds, or illustration with Pine.",
+      "Don't add accounts, avatars, cloud glyphs, or social proof; those break the sealed, non-invasive product.",
+      "Don't use heavy drop shadows, glass, or gradient scrims.",
+      "Don't treat the unused isometric hero.png as brand art; it is not in this system."
+    ]
+  }
+}

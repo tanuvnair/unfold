@@ -42,12 +42,13 @@ func Register(bankKey string, factory Factory) {
 func Get(bankKey string) (Parser, error) {
 	factory, ok := registry[bankKey]
 	if !ok {
-		return nil, fmt.Errorf("no parser registered for bank %q (known: %v)", bankKey, knownKeys())
+		return nil, fmt.Errorf("no parser registered for bank %q (known: %v)", bankKey, Keys())
 	}
 	return factory(), nil
 }
 
-func knownKeys() []string {
+// Keys returns the registered bank parser keys.
+func Keys() []string {
 	keys := make([]string, 0, len(registry))
 	for k := range registry {
 		keys = append(keys, k)

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "command": "[ ! -f '/home/algorisys-tanuv/.cursor/skills/impeccable/scripts/hook-before-edit.mjs' ] || node '/home/algorisys-tanuv/.cursor/skills/impeccable/scripts/hook-before-edit.mjs'",
+        "timeout": 5
+      }
+    ]
+  }
+}
