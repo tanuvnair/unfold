@@ -81,3 +81,51 @@ func TestRun_ClassifiesKeywordRecurrenceAndOneOff(t *testing.T) {
 		}
 	}
 }
+
+func TestRun_ExcludesIBMonthlyInvestment(t *testing.T) {
+	const csv = `"Sl. No.","Transaction Date","Value Date","Description","Chq /Ref No.","Amount","Dr / Cr","Balance","Dr / Cr"
+"1","05-01-2026 05:35:37","05-01-2026","IB:MONTHLY INVESTMENT","0001","5,000.00","DR","100.00","CR"
+"2","05-02-2026 05:35:37","05-02-2026","IB:MONTHLY INVESTMENT","0002","5,000.00","DR","100.00","CR"
+"3","05-03-2026 05:35:37","05-03-2026","IB:MONTHLY INVESTMENT","0003","5,000.00","DR","100.00","CR"
+"4","05-01-2026 11:00:00","05-01-2026","UPI/Netflix/1111111111/Payment","UPI-1","199.00","DR","100.00","CR"
+"5","05-02-2026 11:00:00","05-02-2026","UPI/Netflix/2222222222/Payment","UPI-2","199.00","DR","100.00","CR"
+"6","05-03-2026 11:00:00","05-03-2026","UPI/Netflix/3333333333/Payment","UPI-3","199.00","DR","100.00","CR"
+`
+
+	cfg := config.Config{
+		BankName:          "Kotak Mahindra Bank",
+		DescriptionColumn: "Description",
+		AmountColumn:      "Amount",
+		DateColumn:        "Transaction Date",
+		DateFormat:        "02-01-2006 15:04:05",
+		TypeColumn:        "Dr / Cr",
+		Keywords: []config.KeywordRule{
+			{Term: "NACH", Tier: "high"},
+			{Term: "MONTHLY INVESTMENT", Tier: "medium"},
+		},
+		ExcludeKeywords: []string{"MONTHLY INVESTMENT"},
+	}
+
+	rpt, err := analyze.Run(cfg, strings.NewReader(csv))
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	for _, e := range rpt.Transactions {
+		desc := report.EntryDescription(e)
+		if strings.Contains(desc, "IB:") || strings.Contains(desc, "MONTHLY INVESTMENT") {
+			t.Fatalf("IB monthly investment should not be flagged: %+v", e)
+		}
+		if e.Date.IsZero() {
+			t.Fatalf("Entry.Date should be set for %q", desc)
+		}
+	}
+	netflixCount := 0
+	for _, e := range rpt.Transactions {
+		if strings.Contains(report.EntryDescription(e), "Netflix") {
+			netflixCount++
+		}
+	}
+	if netflixCount != 3 {
+		t.Fatalf("Netflix hits=%d want 3; total=%d", netflixCount, rpt.TransactionCount)
+	}
+}

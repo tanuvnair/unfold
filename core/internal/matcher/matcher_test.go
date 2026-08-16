@@ -100,3 +100,43 @@ func TestFilter_ExcludeWinsOverHighTierInclude(t *testing.T) {
 		t.Fatalf("got %d matches, want 0 (exclude should win)", len(got))
 	}
 }
+
+func TestFilter_SkipsIBSelfTransfer(t *testing.T) {
+	txns := []txn.Transaction{
+		{Description: "IB:MONTHLY INVESTMENT", Type: "DR"},
+		{Description: "NACH SIP mutual fund", Type: "DR"},
+	}
+	got := matcher.Filter(txns, []config.KeywordRule{
+		{Term: "NACH", Tier: "high"},
+		{Term: "MONTHLY INVESTMENT", Tier: "medium"},
+	}, nil)
+	if len(got) != 1 {
+		t.Fatalf("got %d matches, want 1", len(got))
+	}
+	if got[0].Transaction.Description != "NACH SIP mutual fund" {
+		t.Fatalf("unexpected match: %q", got[0].Transaction.Description)
+	}
+}
+
+func TestFilter_ExcludeMonthlyInvestmentPhrase(t *testing.T) {
+	txns := []txn.Transaction{
+		{Description: "UPI/FOO/MONTHLY INVESTMENT TO ICICI ACCOUNT", Type: "DR"},
+	}
+	got := matcher.Filter(
+		txns,
+		[]config.KeywordRule{{Term: "MANDATE", Tier: "high"}},
+		[]string{"MONTHLY INVESTMENT", "TO ICICI ACCOUNT"},
+	)
+	if len(got) != 0 {
+		t.Fatalf("got %d matches, want 0", len(got))
+	}
+}
+
+func TestLooksLikeSelfTransfer(t *testing.T) {
+	if !matcher.LooksLikeSelfTransfer("IB:MONTHLY INVESTMENT") {
+		t.Fatal("expected IB: prefix to be self-transfer")
+	}
+	if matcher.LooksLikeSelfTransfer("UPI/Netflix/111/Payment") {
+		t.Fatal("Netflix UPI should not be self-transfer")
+	}
+}

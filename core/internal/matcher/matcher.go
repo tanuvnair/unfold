@@ -36,6 +36,9 @@ func match(t txn.Transaction, include []config.KeywordRule, exclude []string) (M
 	if strings.EqualFold(strings.TrimSpace(t.Type), "CR") {
 		return Match{}, false
 	}
+	if LooksLikeSelfTransfer(t.Description) {
+		return Match{}, false
+	}
 	description := strings.ToUpper(t.Description)
 	confidence, term, ok := bestIncludeHit(description, include)
 	if !ok {

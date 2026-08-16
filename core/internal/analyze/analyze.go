@@ -18,6 +18,9 @@ import (
 // Run parses statement with the bank parser for cfg, runs keyword matching
 // and recurrence detection independently, merges hits, and builds a report.
 // It does not write anything to disk.
+//
+// Classifier is reserved for an optional future local scorer (never cloud);
+// the pipeline today is rules-only.
 func Run(cfg config.Config, statement io.Reader) (report.Report, error) {
 	bankParser, err := parser.Get(cfg.BankKey())
 	if err != nil {
@@ -29,15 +32,14 @@ func Run(cfg config.Config, statement io.Reader) (report.Report, error) {
 		return report.Report{}, fmt.Errorf("parse statement: %w", err)
 	}
 
+	exclude := cfg.NormalizedExcludeKeywords()
 	keywordHits := matcher.Filter(
 		transactions,
 		cfg.NormalizedKeywords(),
-		cfg.NormalizedExcludeKeywords(),
+		exclude,
 	)
 	recHits := recurrence.DetectRecurring(
-		recurrence.GroupByPayee(
-			excludeDescriptions(transactions, cfg.NormalizedExcludeKeywords()),
-		),
+		recurrence.GroupByPayee(excludeDescriptions(transactions, exclude)),
 	)
 
 	entries := merge(keywordHits, recHits)
@@ -45,11 +47,11 @@ func Run(cfg config.Config, statement io.Reader) (report.Report, error) {
 }
 
 func excludeDescriptions(transactions []txn.Transaction, exclude []string) []txn.Transaction {
-	if len(exclude) == 0 {
-		return transactions
-	}
 	out := make([]txn.Transaction, 0, len(transactions))
 	for _, t := range transactions {
+		if matcher.LooksLikeSelfTransfer(t.Description) {
+			continue
+		}
 		desc := strings.ToUpper(t.Description)
 		skip := false
 		for _, kw := range exclude {
@@ -120,6 +122,7 @@ func toEntry(p *pending) report.Entry {
 	e := report.Entry{
 		Fields:     p.txn.Fields,
 		PayeeToken: recurrence.NormalizePayee(p.txn.Description),
+		Date:       p.txn.Date,
 	}
 	switch {
 	case p.hasKeyword && p.hasRecurrence:

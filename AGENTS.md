@@ -61,15 +61,18 @@ changes.
 | Param | Default | Notes |
 | --- | --- | --- |
 | `q` | `""` | Description substring; input is debounced 300ms before the URL/query updates |
+| `from` | `""` | Inclusive start date (`YYYY-MM-DD`); empty = no lower bound |
+| `to` | `""` | Inclusive end date (`YYYY-MM-DD`); empty = no upper bound |
 | `confidence` | `all` | `all` \| `high` \| `medium` \| `low` |
 | `source` | `all` | `all` \| `keyword` \| `recurrence` \| `both` |
 | `view` | `grouped` | `grouped` \| `transactions` |
 | `page` | `1` | **1-based in the URL** |
 | `pageSize` | `10` | `10` \| `20` \| `25` \| `50` |
 
-Defaults are omitted from the URL. Changing `q`, `confidence`, or `source`
-resets `page` to 1. Matched charges are expenses only: the UI always queries
-`type=DR` (credits/refunds are excluded by the analyze pipeline and not shown).
+Defaults are omitted from the URL. Changing `q`, `from`, `to`, `confidence`,
+or `source` resets `page` to 1. Matched charges are expenses only: the UI
+always queries `type=DR` (credits/refunds are excluded by the analyze pipeline
+and not shown).
 
 The HTTP API `page` query is **0-based**. Convert in
 `fetchReportTransactions` (`page: search.page - 1`). Do not mix the two.
@@ -90,7 +93,12 @@ Parser/defaults: `web/src/lib/results-search.ts`.
 - Confidence is a `ToggleGroup` (All / High / Medium / Low). Source is a
   `ToggleGroup` (All / Keyword / Pattern / Both). View is a `ToggleGroup`
   (Grouped / Transactions); default is Grouped with expandable payee rows.
-  Search uses `InputGroup`. There is no DR/CR filter — expenses only.
+  Search uses `InputGroup`. From / To use Popover + `Calendar`
+  `mode="single"` (writes URL `from` / `to`). Source and Confidence are
+  labeled `ToggleGroup`s. Filters sit as a `FieldGroup` toolbar inside the
+  Matched charges `Card` (no nested card), with Clear filters beside search.
+  View (Grouped / Transactions) is a `CardAction` on that card header.
+  There is no DR/CR filter — expenses only.
 - Empty filtered results use the `Empty` component; load errors use `Alert`.
 
 Add shadcn pieces with `npx shadcn@latest` from `web/`. Do not `--overwrite`

@@ -108,6 +108,8 @@ export async function fetchReportTransactions(
     page: number;
     pageSize: number;
     payee?: string;
+    from?: string;
+    to?: string;
   },
 ): Promise<{rows: MatchedTransaction[]; rowCount: number}> {
   const search = new URLSearchParams({
@@ -128,6 +130,12 @@ export async function fetchReportTransactions(
   }
   if (params.payee?.trim()) {
     search.set('payee', params.payee.trim());
+  }
+  if (params.from?.trim()) {
+    search.set('from', params.from.trim());
+  }
+  if (params.to?.trim()) {
+    search.set('to', params.to.trim());
   }
 
   const res = await fetch(
@@ -196,6 +204,8 @@ export async function fetchReportSummary(
     type: TransactionTypeFilter;
     confidence: ConfidenceFilter;
     source: SourceFilter;
+    from?: string;
+    to?: string;
   },
 ): Promise<ReportSummary> {
   const search = new URLSearchParams();
@@ -210,6 +220,12 @@ export async function fetchReportSummary(
   }
   if (params.source !== 'all') {
     search.set('source', params.source);
+  }
+  if (params.from?.trim()) {
+    search.set('from', params.from.trim());
+  }
+  if (params.to?.trim()) {
+    search.set('to', params.to.trim());
   }
   const qs = search.toString();
   const res = await fetch(

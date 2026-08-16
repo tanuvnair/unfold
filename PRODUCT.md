@@ -38,6 +38,7 @@ Confirmed:
 Undecided (do not invent in UI copy or flows):
 
 - Additional bank parsers, PDF/screenshot input, live bank connect, user accounts, stored statement history, hosted/multi-tenant deployment.
+- Optional local classifier to rescore borderline matches (never cloud; statements must not leave the machine).
 
 Terminology: autopay, mandate, NACH, SIP / monthly investment, standing instruction, statement CSV, bank profile, report / matched transactions.
 

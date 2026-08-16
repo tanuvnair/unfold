@@ -4,6 +4,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/tanuvnair/unfold/internal/report"
 )
@@ -19,6 +20,8 @@ type SummaryQuery struct {
 	Type       string
 	Confidence string
 	Source     string
+	DateFrom   time.Time
+	DateTo     time.Time
 }
 
 // SummaryGroup is one payee aggregate for the grouped results view.
@@ -50,6 +53,8 @@ func Summary(rows []report.Entry, q SummaryQuery) SummaryResult {
 		Type:       q.Type,
 		Confidence: q.Confidence,
 		Source:     q.Source,
+		DateFrom:   q.DateFrom,
+		DateTo:     q.DateTo,
 	}.normalized()
 
 	filtered := filterEntries(rows, nq)
@@ -94,32 +99,11 @@ func Summary(rows []report.Entry, q SummaryQuery) SummaryResult {
 }
 
 func filterEntries(rows []report.Entry, q Query) []report.Entry {
-	search := strings.ToLower(strings.TrimSpace(q.Search))
-	typeFilter := strings.ToUpper(strings.TrimSpace(q.Type))
-	confidenceFilter := strings.ToLower(strings.TrimSpace(q.Confidence))
-	sourceFilter := strings.ToLower(strings.TrimSpace(q.Source))
-
 	out := make([]report.Entry, 0, len(rows))
 	for _, row := range rows {
-		if search != "" && !strings.Contains(strings.ToLower(report.DescriptionOf(row.Fields)), search) {
-			continue
+		if entryMatches(row, q) {
+			out = append(out, row)
 		}
-		if typeFilter != "" {
-			if strings.ToUpper(strings.TrimSpace(lookup(row.Fields, "Dr / Cr"))) != typeFilter {
-				continue
-			}
-		}
-		if confidenceFilter != "" {
-			if strings.ToLower(strings.TrimSpace(row.Confidence)) != confidenceFilter {
-				continue
-			}
-		}
-		if sourceFilter != "" {
-			if strings.ToLower(strings.TrimSpace(row.DetectionSource)) != sourceFilter {
-				continue
-			}
-		}
-		out = append(out, row)
 	}
 	return out
 }

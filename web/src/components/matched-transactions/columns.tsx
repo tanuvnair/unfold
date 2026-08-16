@@ -28,7 +28,7 @@ export const columns = columnHelper.columns([
     header: () => <div className="text-right">Amount</div>,
     meta: {headerClassName: 'text-right', cellClassName: 'text-right'},
     cell: ({getValue}) => (
-      <span className="font-medium tabular-nums">{getValue() || '—'}</span>
+      <span className="tabular-nums">{getValue() || '—'}</span>
     ),
   }),
   columnHelper.accessor('confidence', {

@@ -2,12 +2,13 @@ import {createFileRoute, Link, redirect, stripSearchParams} from '@tanstack/reac
 import {HugeiconsIcon} from '@hugeicons/react';
 import {SearchRemoveIcon} from '@hugeicons/core-free-icons';
 
-import {MatchedTransactionsTable} from '@/components/matched-transactions/table';
+import {MatchedTransactionsTable, ResultsViewToggle} from '@/components/matched-transactions/table';
 import {BrandLockup, Page} from '@/components/layout/page';
 import {Badge} from '@/components/ui/badge';
 import {Button} from '@/components/ui/button';
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -75,6 +76,11 @@ function ResultsPage() {
             Expand a payee for the underlying rows, or switch to the flat
             transaction list.
           </CardDescription>
+          {report.transaction_count > 0 ? (
+            <CardAction>
+              <ResultsViewToggle />
+            </CardAction>
+          ) : null}
         </CardHeader>
         <Separator />
         <CardContent>

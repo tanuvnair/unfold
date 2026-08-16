@@ -1,10 +1,12 @@
 import {Fragment, useEffect, useState} from 'react';
 import {keepPreviousData, useQuery} from '@tanstack/react-query';
 import {useNavigate, useSearch} from '@tanstack/react-router';
+import {format, parse} from 'date-fns';
 import {HugeiconsIcon} from '@hugeicons/react';
 import {
   ArrowDown01Icon,
   ArrowRight01Icon,
+  Calendar01Icon,
   Search01Icon,
   SearchRemoveIcon,
 } from '@hugeicons/core-free-icons';
@@ -18,6 +20,8 @@ import {
 import {columns} from '@/components/matched-transactions/columns';
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
 import {Badge} from '@/components/ui/badge';
+import {Button} from '@/components/ui/button';
+import {Calendar} from '@/components/ui/calendar';
 import {
   Collapsible,
   CollapsibleContent,
@@ -52,6 +56,12 @@ import {
   ItemSeparator,
   ItemTitle,
 } from '@/components/ui/item';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {Separator} from '@/components/ui/separator';
 import {Skeleton} from '@/components/ui/skeleton';
 import {ToggleGroup, ToggleGroupItem} from '@/components/ui/toggle-group';
 import {
@@ -63,7 +73,87 @@ import {
   type SummaryGroup,
 } from '@/lib/api';
 import {useDebouncedValue} from '@/hooks/use-debounced-value';
-import type {ResultsView} from '@/lib/results-search';
+import {
+  resultsSearchDefaults,
+  type ResultsView,
+} from '@/lib/results-search';
+import {cn} from '@/lib/utils';
+
+function parseISODateLocal(value: string): Date | undefined {
+  if (!value) {
+    return undefined;
+  }
+  return parse(value, 'yyyy-MM-dd', new Date());
+}
+
+function formatISODateLocal(date: Date): string {
+  return format(date, 'yyyy-MM-dd');
+}
+
+function DatePickerField({
+  id,
+  label,
+  value,
+  onChange,
+  timeZone,
+  disabled,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (next: string) => void;
+  timeZone?: string;
+  disabled?: (date: Date) => boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = parseISODateLocal(value);
+
+  return (
+    <Field className="w-fit">
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger
+          render={
+            <Button
+              id={id}
+              variant="outline"
+              size="sm"
+              data-empty={!selected}
+              className={cn(
+                'min-w-40 justify-start text-left font-normal',
+                'data-[empty=true]:text-muted-foreground',
+              )}
+            />
+          }
+        >
+          <HugeiconsIcon
+            icon={Calendar01Icon}
+            strokeWidth={2}
+            data-icon="inline-start"
+          />
+          {selected ? (
+            format(selected, 'LLL dd, y')
+          ) : (
+            <span>Pick a date</span>
+          )}
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={selected}
+            defaultMonth={selected}
+            onSelect={(date) => {
+              onChange(date ? formatISODateLocal(date) : '');
+              setOpen(false);
+            }}
+            disabled={disabled}
+            timeZone={timeZone}
+          />
+        </PopoverContent>
+      </Popover>
+    </Field>
+  );
+}
 
 const CONFIDENCE_ITEMS: Array<{label: string; value: ConfidenceFilter}> = [
   {label: 'All', value: 'all'},
@@ -101,6 +191,14 @@ function ResultsFilters({
 }) {
   const search = useSearch({from: '/results'});
   const navigate = useNavigate({from: '/results'});
+  const [timeZone, setTimeZone] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    setTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  }, []);
+
+  const fromDate = parseISODateLocal(search.from);
+  const toDate = parseISODateLocal(search.to);
 
   function setConfidence(confidence: ConfidenceFilter) {
     void navigate({search: (prev) => ({...prev, confidence, page: 1})});
@@ -108,14 +206,39 @@ function ResultsFilters({
   function setSource(source: SourceFilter) {
     void navigate({search: (prev) => ({...prev, source, page: 1})});
   }
-  function setView(view: ResultsView) {
-    void navigate({search: (prev) => ({...prev, view, page: 1})});
+  function setFrom(from: string) {
+    void navigate({search: (prev) => ({...prev, from, page: 1})});
   }
+  function setTo(to: string) {
+    void navigate({search: (prev) => ({...prev, to, page: 1})});
+  }
+  function clearFilters() {
+    onSearchInput('');
+    void navigate({
+      search: (prev) => ({
+        ...prev,
+        q: resultsSearchDefaults.q,
+        from: resultsSearchDefaults.from,
+        to: resultsSearchDefaults.to,
+        confidence: resultsSearchDefaults.confidence,
+        source: resultsSearchDefaults.source,
+        page: 1,
+      }),
+    });
+  }
+
+  const filtersActive =
+    Boolean(searchInput.trim()) ||
+    Boolean(search.q.trim()) ||
+    Boolean(search.from) ||
+    Boolean(search.to) ||
+    search.confidence !== resultsSearchDefaults.confidence ||
+    search.source !== resultsSearchDefaults.source;
 
   return (
     <FieldGroup>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <Field className="w-full max-w-sm">
+      <FieldGroup className="gap-3 sm:flex-row sm:items-center">
+        <Field className="min-w-0 flex-1">
           <FieldLabel htmlFor="txn-search" className="sr-only">
             Search descriptions
           </FieldLabel>
@@ -131,35 +254,42 @@ function ResultsFilters({
             />
           </InputGroup>
         </Field>
-        <Field orientation="horizontal" className="w-fit shrink-0">
-          <FieldLabel className="sr-only" id="txn-view-label">
-            Results view
+        <Field className="w-fit shrink-0">
+          <FieldLabel className="sr-only" htmlFor="txn-clear-filters">
+            Clear filters
           </FieldLabel>
-          <ToggleGroup
-            variant="outline"
-            spacing={0}
-            value={[search.view]}
-            aria-labelledby="txn-view-label"
-            onValueChange={(value) => {
-              const next = value[0] as ResultsView | undefined;
-              if (next) {
-                setView(next);
-              }
-            }}
+          <Button
+            id="txn-clear-filters"
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={!filtersActive}
+            onClick={clearFilters}
           >
-            {VIEW_ITEMS.map((item) => (
-              <ToggleGroupItem key={item.value} value={item.value}>
-                {item.label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
+            Clear filters
+          </Button>
         </Field>
-      </div>
-      <FieldGroup className="gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <Field orientation="horizontal" className="w-fit">
-          <FieldLabel className="sr-only" id="txn-source-label">
-            Detection source
-          </FieldLabel>
+      </FieldGroup>
+
+      <FieldGroup className="gap-4 sm:flex-row sm:flex-wrap sm:items-end">
+        <DatePickerField
+          id="txn-from"
+          label="From"
+          value={search.from}
+          onChange={setFrom}
+          timeZone={timeZone}
+          disabled={toDate ? (date) => date > toDate : undefined}
+        />
+        <DatePickerField
+          id="txn-to"
+          label="To"
+          value={search.to}
+          onChange={setTo}
+          timeZone={timeZone}
+          disabled={fromDate ? (date) => date < fromDate : undefined}
+        />
+        <Field className="w-fit">
+          <FieldLabel id="txn-source-label">Source</FieldLabel>
           <ToggleGroup
             variant="outline"
             size="sm"
@@ -180,10 +310,8 @@ function ResultsFilters({
             ))}
           </ToggleGroup>
         </Field>
-        <Field orientation="horizontal" className="w-fit">
-          <FieldLabel className="sr-only" id="txn-confidence-label">
-            Confidence
-          </FieldLabel>
+        <Field className="w-fit">
+          <FieldLabel id="txn-confidence-label">Confidence</FieldLabel>
           <ToggleGroup
             variant="outline"
             size="sm"
@@ -209,6 +337,33 @@ function ResultsFilters({
   );
 }
 
+export function ResultsViewToggle() {
+  const search = useSearch({from: '/results'});
+  const navigate = useNavigate({from: '/results'});
+
+  return (
+    <ToggleGroup
+      variant="outline"
+      size="sm"
+      spacing={0}
+      value={[search.view]}
+      aria-label="Results view"
+      onValueChange={(value) => {
+        const next = value[0] as ResultsView | undefined;
+        if (next) {
+          void navigate({search: (prev) => ({...prev, view: next, page: 1})});
+        }
+      }}
+    >
+      {VIEW_ITEMS.map((item) => (
+        <ToggleGroupItem key={item.value} value={item.value}>
+          {item.label}
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
+  );
+}
+
 function PayeeGroupRow({report, group}: {report: Report; group: SummaryGroup}) {
   const [open, setOpen] = useState(false);
   const search = useSearch({from: '/results'});
@@ -224,6 +379,8 @@ function PayeeGroupRow({report, group}: {report: Report; group: SummaryGroup}) {
         page: 0,
         pageSize: Math.max(group.occurrenceCount, 10),
         payee: group.payee,
+        from: search.from,
+        to: search.to,
       }),
     enabled: open,
   });
@@ -234,77 +391,80 @@ function PayeeGroupRow({report, group}: {report: Report; group: SummaryGroup}) {
   const countLabel = `× ${group.occurrenceCount}`;
 
   return (
-    <Item
-      size="sm"
-      className="w-full min-w-0 flex-col flex-nowrap items-stretch rounded-none border-0 px-0 py-0"
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
       role="listitem"
+      className="w-full min-w-0"
     >
-      <Collapsible open={open} onOpenChange={setOpen} className="w-full min-w-0">
-        <CollapsibleTrigger className="flex h-auto w-full max-w-full min-w-0 shrink cursor-pointer items-center justify-start gap-3 rounded-2xl px-3.5 py-3 text-left text-sm font-medium outline-none transition-all focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:pointer-events-none disabled:opacity-50">
-          <ItemMedia variant="icon" className="shrink-0">
-            <HugeiconsIcon
-              icon={open ? ArrowDown01Icon : ArrowRight01Icon}
-              strokeWidth={2}
-            />
-          </ItemMedia>
-          <ItemContent className="min-w-0 flex-1 overflow-hidden">
-            <ItemTitle className="block w-full min-w-0 max-w-full truncate">
-              {group.payee}
-            </ItemTitle>
-            <ItemDescription className="truncate">
-              <span className="tabular-nums">
-                {amountLabel} · {countLabel}
-              </span>
-            </ItemDescription>
-          </ItemContent>
-          <ItemActions className="shrink-0">
-            {group.confidence ? (
-              <Badge variant={confidenceBadgeVariant(group.confidence)}>
-                {confidenceLabel(group.confidence)}
-              </Badge>
-            ) : null}
-            {group.source ? (
-              <Badge variant={sourceBadgeVariant(group.source)}>
-                {sourceLabel(group.source)}
-              </Badge>
-            ) : null}
-          </ItemActions>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="pb-3 pl-7">
-          {detail.isError ? (
-            <Alert variant="destructive">
-              <AlertTitle>Could not load transactions</AlertTitle>
-              <AlertDescription>
-                {(detail.error as Error).message}
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <DataTable
-              columns={columns}
-              data={detail.data?.rows ?? []}
-              rowCount={detail.data?.rowCount ?? 0}
-              pagination={{
-                pageIndex: 0,
-                pageSize: Math.max(group.occurrenceCount, 10),
-              }}
-              onPaginationChange={() => {}}
-              getRowId={(row) => row.id}
-              isLoading={detail.isPending}
-              isFetching={detail.isFetching}
-              showPagination={false}
-              variant="embedded"
-              empty={
-                <Empty className="border-0 py-6">
-                  <EmptyHeader>
-                    <EmptyTitle>No rows</EmptyTitle>
-                  </EmptyHeader>
-                </Empty>
-              }
-            />
-          )}
-        </CollapsibleContent>
-      </Collapsible>
-    </Item>
+      <Item
+        size="sm"
+        className="w-full min-w-0"
+        render={<CollapsibleTrigger />}
+      >
+        <ItemMedia variant="icon">
+          <HugeiconsIcon
+            icon={open ? ArrowDown01Icon : ArrowRight01Icon}
+            strokeWidth={2}
+          />
+        </ItemMedia>
+        <ItemContent className="min-w-0 flex-1 overflow-hidden">
+          <ItemTitle className="min-w-0 max-w-full">
+            {group.payee}
+          </ItemTitle>
+          <ItemDescription className="truncate">
+            <span className="tabular-nums">
+              {amountLabel} · {countLabel}
+            </span>
+          </ItemDescription>
+        </ItemContent>
+        <ItemActions>
+          {group.confidence ? (
+            <Badge variant={confidenceBadgeVariant(group.confidence)}>
+              {confidenceLabel(group.confidence)}
+            </Badge>
+          ) : null}
+          {group.source ? (
+            <Badge variant={sourceBadgeVariant(group.source)}>
+              {sourceLabel(group.source)}
+            </Badge>
+          ) : null}
+        </ItemActions>
+      </Item>
+      <CollapsibleContent className="pb-3 pl-11">
+        {detail.isError ? (
+          <Alert variant="destructive">
+            <AlertTitle>Could not load transactions</AlertTitle>
+            <AlertDescription>
+              {(detail.error as Error).message}
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={detail.data?.rows ?? []}
+            rowCount={detail.data?.rowCount ?? 0}
+            pagination={{
+              pageIndex: 0,
+              pageSize: Math.max(group.occurrenceCount, 10),
+            }}
+            onPaginationChange={() => {}}
+            getRowId={(row) => row.id}
+            isLoading={detail.isPending}
+            isFetching={detail.isFetching}
+            showPagination={false}
+            variant="embedded"
+            empty={
+              <Empty className="border-0 py-6">
+                <EmptyHeader>
+                  <EmptyTitle>No rows</EmptyTitle>
+                </EmptyHeader>
+              </Empty>
+            }
+          />
+        )}
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
@@ -350,6 +510,8 @@ export function MatchedTransactionsTable({report}: {report: Report}) {
       search.q,
       search.confidence,
       search.source,
+      search.from,
+      search.to,
     ],
     queryFn: () =>
       fetchReportSummary(report.id, {
@@ -357,6 +519,8 @@ export function MatchedTransactionsTable({report}: {report: Report}) {
         type: 'DR',
         confidence: search.confidence,
         source: search.source,
+        from: search.from,
+        to: search.to,
       }),
     placeholderData: keepPreviousData,
     enabled: search.view === 'grouped',
@@ -372,6 +536,8 @@ export function MatchedTransactionsTable({report}: {report: Report}) {
         source: search.source,
         page: search.page - 1,
         pageSize: search.pageSize,
+        from: search.from,
+        to: search.to,
       }),
     placeholderData: keepPreviousData,
     enabled: search.view === 'transactions',
@@ -417,6 +583,7 @@ export function MatchedTransactionsTable({report}: {report: Report}) {
         searchInput={searchInput}
         onSearchInput={setSearchInput}
       />
+      <Separator />
       {isError ? (
         <Alert variant="destructive">
           <AlertTitle>Could not load results</AlertTitle>
@@ -431,7 +598,7 @@ export function MatchedTransactionsTable({report}: {report: Report}) {
           {summaryQuery.data && summaryQuery.data.estimatedMonthlyTotal > 0 ? (
             <FieldDescription>
               Estimated monthly{' '}
-              <span className="font-medium tabular-nums text-foreground">
+              <span className="tabular-nums">
                 {formatINR(summaryQuery.data.estimatedMonthlyTotal)}
               </span>
             </FieldDescription>

@@ -203,3 +203,16 @@ func TestDetectRecurring_RejectsWideGaps(t *testing.T) {
 		t.Fatalf("got %d detections, want 0 for non-monthly gaps", len(got))
 	}
 }
+
+func TestGroupByPayee_StillGroupsIBWhenPassed(t *testing.T) {
+	// analyze strips IB: before GroupByPayee; this asserts GroupByPayee itself
+	// still accepts DR rows (exclusion is analyze/matcher responsibility).
+	txns := []txn.Transaction{
+		{Description: "IB:MONTHLY INVESTMENT", Type: "DR", Amount: 5000},
+		{Description: "IB:MONTHLY INVESTMENT", Type: "DR", Amount: 5000},
+	}
+	groups := recurrence.GroupByPayee(txns)
+	if len(groups) != 1 {
+		t.Fatalf("got %d groups, want 1", len(groups))
+	}
+}

@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/tanuvnair/unfold/internal/txn"
 )
@@ -40,6 +41,8 @@ type Report struct {
 
 // Entry is one matched transaction: detection metadata plus the full bank row.
 // JSON flattens detection keys alongside bank columns.
+// Date is set at analyze time for server-side filtering and is not written to
+// autopay_report.json (same as HasRecurrenceMetrics).
 type Entry struct {
 	Confidence           string
 	MatchedTerm          string
@@ -48,6 +51,7 @@ type Entry struct {
 	AmountVarianceRatio  float64
 	AvgIntervalDays      float64
 	HasRecurrenceMetrics bool // controls whether variance/interval are written
+	Date                 time.Time
 	Fields               txn.Fields
 }
 

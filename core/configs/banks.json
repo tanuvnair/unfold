@@ -14,15 +14,22 @@
         { "term": "MANDATE", "tier": "high" },
         { "term": "AUTOPAY", "tier": "high" },
         { "term": "STANDING", "tier": "medium" },
-        { "term": "RECURRING", "tier": "medium" },
-        { "term": "MONTHLY INVESTMENT", "tier": "medium" }
+        { "term": "RECURRING", "tier": "medium" }
       ],
       "exclude_keywords": [
         "REFUND",
         "REVERSAL",
         "CHARGEBACK",
         "CASHBACK",
-        "FAILED"
+        "FAILED",
+        "SELF",
+        "OWN ACCOUNT",
+        "TO ICICI ACCOUNT",
+        "TO HDFC ACCOUNT",
+        "TO SBI ACCOUNT",
+        "INTERNAL",
+        "FUND TRANSFER",
+        "MONTHLY INVESTMENT"
       ]
     }
   ]

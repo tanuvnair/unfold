@@ -8,6 +8,8 @@ export type ResultsSearch = {
   q: string;
   confidence: ConfidenceFilter;
   source: SourceFilter;
+  from: string;
+  to: string;
   view: ResultsView;
   page: number;
   pageSize: number;
@@ -17,6 +19,8 @@ export const resultsSearchDefaults: ResultsSearch = {
   q: '',
   confidence: 'all',
   source: 'all',
+  from: '',
+  to: '',
   view: 'grouped',
   page: 1,
   pageSize: 10,
@@ -68,6 +72,22 @@ function parseView(value: unknown): ResultsView {
   return resultsSearchDefaults.view;
 }
 
+/** YYYY-MM-DD for date-range filter / API query params. */
+function parseISODate(value: unknown): string {
+  if (typeof value !== 'string') {
+    return '';
+  }
+  const trimmed = value.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return '';
+  }
+  const t = Date.parse(`${trimmed}T00:00:00Z`);
+  if (Number.isNaN(t)) {
+    return '';
+  }
+  return trimmed;
+}
+
 export function parseResultsSearch(
   search: Record<string, unknown>,
 ): ResultsSearch {
@@ -75,6 +95,8 @@ export function parseResultsSearch(
     q: typeof search.q === 'string' ? search.q : resultsSearchDefaults.q,
     confidence: parseConfidence(search.confidence),
     source: parseSource(search.source),
+    from: parseISODate(search.from),
+    to: parseISODate(search.to),
     view: parseView(search.view),
     page: parsePositiveInt(search.page, resultsSearchDefaults.page),
     pageSize: parsePageSize(search.pageSize),
